@@ -1,0 +1,107 @@
+% Stanford University PhD thesis style -- modifications to the report style
+% This is unofficial so you should always double check against the
+% Registrar's office rules
+% See http://library.stanford.edu/research/bibliography-management/latex-and-bibtex
+% 
+% Example of use below
+% See the suthesis-2e.sty file for documentation
+%
+\documentclass{report}
+\usepackage{suthesis-2e}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{mathtools}  % amsmath with extensions
+\usepackage{amsfonts}  % (otherwise \mathbb does nothing)
+\usepackage{amssymb}
+\usepackage{caption}
+\usepackage{comment}
+\usepackage[titlenumbered,ruled]{algorithm2e}
+\usepackage{float}
+\usepackage{soul}
+\usepackage[normalem]{ulem}
+
+\DeclareMathOperator*{\argmin}{argmin}
+\DeclareMathOperator*{\minimize}{minimize}
+\DeclareMathOperator*{\maximize}{maximize}
+\usepackage{t1enc}
+
+\usepackage{cite}
+\usepackage{tikz}
+\usetikzlibrary{arrows}
+\usetikzlibrary{shapes}
+\usetikzlibrary{patterns}
+\usetikzlibrary{positioning}
+\usetikzlibrary{automata}
+\usetikzlibrary{fit}
+\usetikzlibrary{backgrounds}
+\usetikzlibrary{decorations.text}
+\usetikzlibrary{arrows.meta}
+
+\newcommand{\cframe} {canonical frames}
+\newcommand{\cframes} {canonical frames}
+\newcommand{\ccf} {Canonical frames}
+\newcommand{\ccff} {Canonical Frames}
+%\newcommand{\jw}[1] {\textcolor{blue}{#1}}
+\newcommand{\jw}[1]{#1}
+\newcommand{\cam}[1]{#1}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\V}{\mathcal{V}}
+\newcommand{\q}{\mathbf{o}}
+\newcommand{\p}{\mathbf{p}}
+\renewcommand{\r}{\mathbf{r}}
+\newcommand{\n}{\mathbf{n}}
+\newcommand{\x}{\mathbf{x}}
+\newcommand{\y}{\mathbf{y}}
+\newcommand{\z}{\mathbf{z}}
+\renewcommand{\t}{\mathbf{t}}
+\newcommand{\e}{\mathbf{e}}
+\renewcommand{\d}{\mathbf{d}}
+\newcommand{\td}{{\mathbf{d}}}
+\newcommand{\s}{{\mathbf{s}}}
+\renewcommand{\S}{{\mathbf{S}}}
+\newcommand{\D}{{\mathbf{D}}}
+\newcommand{\HH}{\mathbf{H}}
+\newcommand{\mb}[1] {\mathbf{#1}}
+\usepackage{amsthm}
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{corollary}{Corollary}[theorem]
+\newtheorem{lemma}[theorem]{Lemma}
+
+\newtheorem{defn}{Definition}[section]
+\newtheorem{conj}{Conjecture}[section]
+\newtheorem{exmp}{Example}[section]
+
+\newcommand{\para}{\paragraph}
+
+\dept{Computer Science}
+
+\begin{document}
+\title{Surface Texture Processing}
+\author{Jingwei Huang}
+\principaladviser{Leonidas Guibas}
+\firstreader{Karen Liu}
+\secondreader{Jeannette Bohg}
+
+\beforepreface
+\input{0Abstract}
+\input{1Acknowledge}
+\afterpreface
+
+\input{2Introduction}
+
+\input{3RelatedWorks}
+\input{4Texture}
+
+\input{5Param}
+
+\input{6TextureNet}
+
+\input{7FrameNet}
+
+\input{8Conclusion}
+
+\input{9Appendix}
+
+\bibliographystyle{plain}
+\bibliography{mybib}
+\end{document}

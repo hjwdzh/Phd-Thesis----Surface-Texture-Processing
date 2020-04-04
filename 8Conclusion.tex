@@ -1,0 +1,24 @@
+\chapter{Conclusions}
+\label{chapter:conclude}
+In this thesis, we study the surface texture from the perspective of reconstruction and understanding. We reconstruct the high-quality color texture of the 3D surfaces in real environment captured by commodity 3D scanners, and provide effective solutions for learning geometric and semantic information from the surface texture.
+
+For texture reconstruction, we address the inconsistent color mapping problem in the scanning data from two different perspectives. In \emph{3DLite} we propose to compensate all these artifacts by explicitly warping and stitching image fragments from low-quality RGB input data to achieve high-resolution, sharp surface textures. We jointly optimize the sparse and dense terms for accurate alignment. Observing that motion blur is a ubiquitous artifact in many video frames from the input, we select a single candidate frame for every local region of the 3D surface in order to balance the sharpness and boundary coherency.
+%
+Our first perspective shares the idea with most existing methods that enhance the texture quality by minimizing color inconsistency under the L2 metric to reduce the color inconsistency.
+%
+However, these different sources of errors in the real environment can hardly be fully-covered with explicit parametric models, especially with inaccurate scanning geometry.
+%
+From our second perspective, we propose to learn a deep metric that tolerates these errors instead of removing them, and jointly optimize it with the texture so that the learned metric guides the direction of the realistic textures optimization.
+
+While deep learning techniques are widely studied in the image domain based on the 2D convolution operator, there is no consensus on what is the best operator to cooperate with the surface texture signals in 3D.
+%
+We observe that the key challenge is to define a consistent canonical 2D subspace for each local region of the 3D surface for a 2D operator to apply.
+%
+This challenge is related to the seamless surface parameterization problem in the computational geometry community.
+ This is treated as the quadrangulation problem in geometry processing, while a mixed-integer programing problem is required to solve in previous method. We approximate the original NP-hard problem with a simplified version which can be reduced to a minimum cost flow problem with polynomial time complexity. Therefore, we achieve a quadrangulation algorithm called \emph{Quadriflow} which is robust and scalable.
+
+For semantics understanding on textured 3D surfaces, we propose \emph{TextureNet} as a neural network formed with a 2D convolution operator in the local tangent space given our canonical parametrization.
+%
+The 2D convolution is efficient and handles high-resolution texture signals, it outperforms other less efficient dense 3D convolution operators.
+
+Finally, the geometric surface parametrization serves as not only a basis for 3D convolution operators to apply, but also useful information that is highly-correlated and learnable from the color signals. With the existence of scanning data with aligned RGB images, we propose to render the pre-computed 3D canonical frames given the camera transformation to the input views, and train a neural network (\emph{FrameNet}) to estimate them from the RGB images. With understanding the 3D canonical frames from RGB images, our network enables applications ranging from surface normal estimation, feature matching and augmented reality. 
