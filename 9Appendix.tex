@@ -31,7 +31,7 @@ The poor performance is mainly due to convolutions over regions with seams, larg
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Evaluation of Neighborhood Selection Methods}
 
-The next experiment tests whether the geodesic neighborhoods used by TextureNet convolutional operators are better than volumetric ones used by PointNet++.   To test this, we compare the performance of the original PointNet++ network which takes the Euclidean ball as the neighborhood, with slightly modified versions which take a cuboid or our geodesic patch as a neighborhood. As shown in Table~\ref{tab:texturenet-neighbor}, the geodesic patch achieves a slightly higher score. This might be due to the reason that it is easier for the network to learn the boundary on the 2D subsurface than on the 3D space.
+The next experiment tests whether the geodesic neighborhoods used by TextureNet convolutional operators are better than volumetric ones used by PointNet++.   To test this, we compare the performance of the original PointNet++ network which takes the Euclidean ball as the neighborhood, with slightly modified versions that take a cuboid or our geodesic patch as a neighborhood. As shown in Table~\ref{tab:texturenet-neighbor}, the geodesic patch achieves a slightly higher score. This might be due to the reason that it is easier for the network to learn the boundary on the 2D subsurface than on the 3D space.
 
 \begin{table*}[h]
     \centering
@@ -95,7 +95,7 @@ The next experiment tests whether the geodesic neighborhoods used by TextureNet 
     \label{fig:texturenet-sampling}
 \end{figure}
 
-The next experiment tests the impact of our proposed point sampling method.  While PointNet++~\cite{qi2017pointnet++} adopts the furthest point sampling method to preprocess the data, we use QuadriFlow~\cite{huang2018quadriflow} to sample the points on the surface. It maintains uniform edge length in surface parametrization, and therefore usually provides more uniformly distributed samples on the surface considering the geodesic distance. Figure~\ref{fig:texturenet-sampling} shows the proportion of each class in the ScanNet dataset with QuadriFlow and furthest point sampling.
+The next experiment tests the impact of our proposed point sampling method.  While PointNet++~\cite{qi2017pointnet++} adopts the furthest point sampling method to preprocess the data, we use QuadriFlow~\cite{huang2018quadriflow} to sample the points on the surface. It maintains uniform edge length in surface parameterization, and therefore usually provides more uniformly distributed samples on the surface considering the geodesic distance. Figure~\ref{fig:texturenet-sampling} shows the proportion of each class in the ScanNet dataset with QuadriFlow and furthest point sampling.
 
 We use TextureNet to learn the semantic labels with their input and our samples. Table~\ref{tab:texturenet-sample} shows the  class IoU for the prediction. With more samples for minor classes like the counter, desk, and curtain, our sampling method performs better. Figure~\ref{fig:texturenet-sampling} shows the visualization of different sampling results. Visually, our sampling method leads to more uniformly distributed points on the surface.
 
@@ -112,7 +112,7 @@ We use TextureNet to learn the semantic labels with their input and our samples.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Further Results on Effect of 4-RoSy Surface Convolution}
 \label{appendix:4rosy}
-Table~\ref{tab:texturenet-appendix-operator} provides detailed results for the performance of different surface convolution operators on ScanNet dataset~\cite{dai2017scannet} with input as the point cloud or the point cloud associated with the normal and RGB color for each point (expanding on Table 4 of the paper).    
+Table~\ref{tab:texturenet-appendix-operator} provides detailed results for the performance of different surface convolution operators on the ScanNet dataset~\cite{dai2017scannet} with input as the point cloud or the point cloud associated with the normal and RGB color for each point (expanding on Table 4 of the paper).    
 PN$^+$(A) and PN$^+$ represent PointNet++ with average-pooling and maxpooling, respectively. GCNN$^1$ and GCNN are geodesic convolutional neural networks~\cite{masci2015geodesic} with $N_\rho=3,N_\theta=1$ and $N_\rho=N_\theta=3$ respectively. 
 ACNN represents anisotropic convolutional neural networks~\cite{boscaini2016learning} with $N_\rho=3=N_\theta=3$. RoSy$^1$ refers to a 3x3 convolution along the direction of the 1-rosy orientation field. 
 RoSy$^4$ picks an arbitrary direction from the cross in the 4-rosy field. RoSy$^4$(m) applies 3x3 convolution for each direction of the cross in the 4-rosy field, aggregated by max pooling. 
@@ -266,7 +266,7 @@ We adopt the original parameters used in DORN~\cite{fu2018deep} for NYUv2 depth 
 
 \section{Additional Baselines}
 \paragraph{Necessity to predict both tangent directions and the surface normal}
-\cam{We did an experiment on Scannet to test how the results change when only one tangent direction is predicted.  This method yields mean angle errors of $16.34^\circ$ for normals (versus $15.28^\circ$ with ours) and $12.41^\circ$ for tangents (versus $12.26^\circ$ with ours).  Although a normal and one tangent can define a coordinate frame, it is better to predict the second tangent directly rather than deriving it from the normal.  This result corroborates the main thesis of the paper -- predicting tangents helps predicting 3D coordinate frames.}
+\cam{We did an experiment on Scannet to test how the results change when only one tangent direction is predicted.  This method yields mean angle errors of $16.34^\circ$ for normals (versus $15.28^\circ$ with ours) and $12.41^\circ$ for tangents (versus $12.26^\circ$ with ours).  Although a normal and one tangent can define a coordinate frame, it is better to predict the second tangent directly rather than deriving it from the normal.  This result corroborates the main thesis of the paper -- predicting tangents helps to predict 3D coordinate frames.}
 
 \paragraph{Geometry prediction followed with canonical frames computation} \cam{We did a baseline experiment where we predict depth and normals using the DORN architecture and then use the resulting surface reconstruction to compute the canonical 3D tangent frame with Quadriflow.  The mean angle error of the tangent directions on the ScanNet test set is $35.84^\circ$, while ours is $12.26^\circ$.  The difference is not surprising since our method is trained with the ground truth tangent supervision.}
 
@@ -388,7 +388,7 @@ The joint loss in the training process results in better normal estimation. From
 
 
 \section{Visualization}
-\paragraph{Surface Normal Comparison} Figure~\ref{fig:vis-result} visualizes the normal prediction using the best model w/o. our approach on both the datasets. With our approach, the errors are smaller especially at object boundaries, possibly because of the additional supervision given by the projected tangent principal directions. We show more accurate prediction, especially for small objects.
+\paragraph{Surface Normal Comparison} Figure~\ref{fig:vis-result} visualizes the normal prediction using the best model w/o. our approach on both the datasets. With our approach, the errors are smaller especially at object boundaries, possibly because of the additional supervision given by the projected tangent principal directions. We show more accurate predictions, especially for small objects.
 
 \paragraph{Visualize the tangent principal directions} We show more visualization for the projected tangent principal directions in figure~\ref{fig:vis-supplemental}. The model is trained using the Dorn~\cite{fu2018deep} with our joint loss on ScanNet~\cite{dai2017scannet}. The visualization shows a similar direction field compared to the ground truth and is consistent with human intuition.
 

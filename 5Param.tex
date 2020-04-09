@@ -1,6 +1,6 @@
 \chapter{Surface Parameterization}
 \label{chapter:param}
-This chapter discusses Quadriflow\footnote{This chapter is mainly based on our work in~\cite{huang2018quadriflow}} as a scalable and robust method for quadrangulation, served as a data representation for seamless surface parameterization. We discuss the approach in section~\ref{sec:quad-method}, and evaluate our method in section~\ref{sec:quad-evaluate}.
+In this chapter, we discuss Quadriflow\footnote{This chapter is mainly based on our work in~\cite{huang2018quadriflow}} as a scalable and robust method for quadrangulation, served as a data representation for seamless surface parameterization. We discuss the approach in section~\ref{sec:quad-method}, and evaluate our method in section~\ref{sec:quad-evaluate}.
 
 \section{Methods}
 \label{sec:quad-method}
@@ -245,7 +245,7 @@ Combining Equations~\eqref{eq:quad-im2}, \eqref{eq:quad-consistent}, and~\eqref{
 \begin{align*}
 \minimize_{\p, \t} \quad & E_p(\p, \t)\\
 \text{subject to} \quad & \mathcal{R}^u_{uv}\td_{uv} + \mathcal{R}^u_{vw}\td_{vw} + \mathcal{R}^u_{wu}\td_{wu} = 0 \quad \forall \Delta_{uvw} \in \mathcal{F},  \\
-				   & \text{det} \left[\mathcal{R}^u_{uv}\td_{uv},\;\mathcal{R}^u_{uw}\td_{uw}\right]\geq 0 \quad \forall \Delta_{uvw} \in \mathcal{F}.
+                   & \text{det} \left[\mathcal{R}^u_{uv}\td_{uv},\;\mathcal{R}^u_{uw}\td_{uw}\right]\geq 0 \quad \forall \Delta_{uvw} \in \mathcal{F}.
 \end{align*}
 This is a mixed-integer programming problem. Solving it directly is NP-hard and thus not generally scalable. Our method finds an approximate solution by first computing $\p^*$ and $\t^*$ without constraints, using Gauss--Seidel iterations \cite{jakob2015instant}, then computing $\d^*$ from $\t^*$ according to the definition, then adjusting $\d$ to enforce Equations~\eqref{eq:quad-consistent} and~\eqref{eq:quad-noflip}. To enforce Equation~\eqref{eq:quad-consistent}, we try to solve an integer programming problem, namely to
 \begin{align}
@@ -364,7 +364,7 @@ To use the MCF formulation to solve Equation \eqref{eq:quad-mincost}, we need to
 \label{fig:quad-balance}
 \end{figure}
 
-Some variables may not be balanced initially, but we can balance them by a simple 2D rotation. Suppose $\td_e$ appears in two regularity constraints in Equation~\eqref{eq:quad-mincost-cons} with coefficients $\mathbf{R}_2(k_1)$ and $\mathbf{R}_2(k_2)$. We can rotate the second equation by multiplying it by $\mathbf{R}_2(k_1-k_2+2)$ so that the second coefficient becomes $-\mathbf{R}_2(k_1)$ and balances the two signs of $\td_e$. Figure~\ref{fig:quad-balance} shows an example containing two triangles, in which the frame of each vertex is marked. Panel A shows the variables ${\td}$. We show the regularity constraints, i.e., Equation~\eqref{eq:quad-mincost-cons}, in Panel B as the vector form and in Panel C as the scalar form. The variable ${\textbf{d}}_{23}$ (or variables $x_5$ and $x_6$) has two negative signs and thus is not balanced. By rotating the second equation $180^\circ$ as Panel D illustrates, we are able to balance ${\textbf{d}}_{23}$.
+Some variables may not be balanced initially, but we can balance them by a simple 2D rotation. Suppose $\td_e$ appears in two regularity constraints in Equation~\eqref{eq:quad-mincost-cons} with coefficients $\mathbf{R}_2(k_1)$ and $\mathbf{R}_2(k_2)$. We can rotate the second equation by multiplying it by $\mathbf{R}_2(k_1-k_2+2)$ so that the second coefficient becomes $-\mathbf{R}_2(k_1)$ and balances the two signs of $\td_e$. Figure~\ref{fig:quad-balance} shows an example containing two triangles, in which the frame of each vertex is marked. Panel A shows the variables as ${\td}$. We show the regularity constraints, i.e., Equation~\eqref{eq:quad-mincost-cons}, in Panel B as the vector form and in Panel C as the scalar form. The variable ${\textbf{d}}_{23}$ (or variables $x_5$ and $x_6$) has two negative signs and thus is not balanced. By rotating the second equation $180^\circ$ as Panel D illustrates, we are able to balance ${\textbf{d}}_{23}$.
 
 %\begin{figure}
 %\centering
@@ -373,9 +373,9 @@ Some variables may not be balanced initially, but we can balance them by a simpl
 %\label{fig:vis-boundary}
 %\end{figure}
 
-To balance as many variables as possible, we arbitrarily pick a triangle as the reference (the root of the search tree), and do a breadth first search (BFS) to visit other triangles. For each pair of equations corresponding to the two adjacent triangles along the search tree, we rotate the second equation to balance their shared variables. For the edges that are not on the BFS search tree, the balanced condition is not guaranteed.  We fix those unbalanced variables as constants so that all mutable variables are balanced.
+To balance as many variables as possible, we arbitrarily pick a triangle as the reference (the root of the search tree) and do a breadth-first search (BFS) to visit other triangles. For each pair of equations corresponding to the two adjacent triangles along the search tree, we rotate the second equation to balance their shared variables. For the edges that are not on the BFS search tree, the balanced condition is not guaranteed.  We fix those unbalanced variables as constants so that all mutable variables are balanced.
 
-%We observe that these rotations to balance variables are also geometrically meaningful. Recall that we rotate equations to balance variables. The rotation through a specific angle to an equation can also be viewed as changing the frame of measurement for integer offsets for its corresponding triangle, where the changed frame can be derived by rotating the original frame through the same angle around the normal axis\jw{Is it not clear?}. To illustrate this implicit meaning, we visualize the boundary edges in green, and the frame of measurement for each triangle $\Delta_{uvw}$ in blue by applying the corresponding rotation to $\mathbf{q}_u$ in Figure~\ref{fig:vis-boundary}. We notice that the frame of measurement are consistent between faces with balanced variables, which is reasonable because the directions of the integer offsets are opposite for the shared edge in adjacent triangles. This also implies the insight for our rotation operation: We balance ${\d}_e$ by measuring the integer offset of edge $e$ in two adjacent faces with a locally consistent frame. \jw{add this paragraph!}
+%We observe that these rotations to balance variables are also geometrically meaningful. Recall that we rotate equations to balance variables. The rotation through a specific angle to an equation can also be viewed as changing the frame of measurement for integer offsets for its corresponding triangle, where the changed frame can be derived by rotating the original frame through the same angle around the normal axis\jw{Is it not clear?}. To illustrate this implicit meaning, we visualize the boundary edges in green, and the frame of measurement for each triangle $\Delta_{uvw}$ in blue by applying the corresponding rotation to $\mathbf{q}_u$ in Figure~\ref{fig:vis-boundary}. We notice that the frame of measurement is consistent between faces with balanced variables, which is reasonable because the directions of the integer offsets are opposite for the shared edge in adjacent triangles. This also implies the insight for our rotation operation: We balance ${\d}_e$ by measuring the integer offset of edge $e$ in two adjacent faces with a locally consistent frame. \jw{add this paragraph!}
 
 \paragraph*{Feasibility Condition.} Fixing unbalanced variables to $\td^*$ as constants may lead to an infeasible ILP problem. One necessary condition for feasibility is $\sum_{i=1}^n b_i=0$ for $\mathbf{b}$ in Equation \eqref{eq:quad-ilp}.  To prove this, we add all the equality constraints together $\sum_{i=1}^n \mathbf{A}_i \x = \sum_{i=1}^n b_i$, and because each column of $\mathbf{A}$ contains one $+1$, one $-1$ and $n-2$ zeros, the left hand side is equal to zero, so is $\sum_{i=1}^n b_i$.  From the view of MCF, this requires the outbound capacity of the source $s$ equal to the inbound capacity of the sink $t$.
 
@@ -388,7 +388,7 @@ Given a network $G=(V, E, c, w, s, t)$, if $C^+=C^-$, all the internal vertices 
 \end{theorem}
 
 \begin{proof}
-We prove it by contradiction. Given a network $G=(V, E, c, w, s, t)$ where $V \backslash \{s,t\}$ are strongly connected, we assume $f$ does not satisfy the full flow condition.  Because the edge capacity is larger than $C^+$, the flow on any internal edge $(u,v)$ is smaller than the capacity.  This means that the connectivity of the residual network of $f$ remains unchanged.  Therefore, $V \backslash \{s,t\}$ is still strongly connected in the residual network. Also because $C^+=C^-$ and the full flow condition is not satisfied, $s$ and $t$ must be connected to $V \backslash \{s,t\}$ in the residual network.  So there exists an augmenting path from $s$ to $t$, which contradicts with the assumption.
+We prove it by contradiction. Given a network $G=(V, E, c, w, s, t)$ where $V \backslash \{s,t\}$ are strongly connected, we assume $f$ does not satisfy the full flow condition.  Because the edge capacity is larger than $C^+$, the flow on any internal edge $(u,v)$ is smaller than the capacity.  This means that the connectivity of the residual network of $f$ remains unchanged.  Therefore, $V \backslash \{s,t\}$ is still strongly connected in the residual network. Also because $C^+=C^-$ and the full flow condition is not satisfied, $s$ and $t$ must be connected to $V \backslash \{s,t\}$ in the residual network.  So there exists an augmenting path from $s$ to $t$, which contradicts the assumption.
 \end{proof}
 
 Fortunately, we guarantee the strong connectivity in the MCF network: Because we use BFS to balance variables, any adjacent triangles on the search tree share an edge $e$ with balanced ${\d}_e$. Therefore as long as the triangle mesh $\mathcal{M}$ is connected, the corresponding nodes of the adjacent triangles in the flow networks are connected. Because BFS reaches all triangles in the mesh, the corresponding nodes in the flow networks are strongly connected.  In addition, according to the way we construct the network, we have $C^+ = \sum_{b_i > 0}b_i$ and $C^- = -\sum_{b_i < 0} b_i$.  Thus, $B=0$ implies $C^+ = C^-$. By using the above theorem, we can guarantee the achievement of a full flow by computing the maximum flow once we have $c_{uv} \geq C^+$ for all edges $(u,v) \in E$, or large enough $\HH_{uv}$ in the ILP (Equation~\ref{eq:quad-mincost-cons}).
@@ -410,8 +410,8 @@ To remove position singularities, we first BFS triangles on the mesh to rotate t
 %    \Input{Mesh $\mathcal{G}=(\mathcal{V},\mathcal{E})$, normal vectors $\n$, orientation field $\q^*$, and Position Field $\p$}
 %    \Output{${\textbf{d}}$  that satisfies the no-position singularity constraints}
     %\ForEach{$\mathcal{G}' \in$ connected components of $\mathcal{M}$}{
-%    	\ForEach{$(u,v)\in\mathcal{E}$} {
-%        	Compute ${\textbf{d}}_{uv}$ based on $\q_u,q_v,\p_u,\p_v$
+%        \ForEach{$(u,v)\in\mathcal{E}$} {
+%            Compute ${\textbf{d}}_{uv}$ based on $\q_u,q_v,\p_u,\p_v$
 %        }
 %        Balance ${\textbf{d}}$ with disjoint-set forests\\
 %        Randomly modify unbalanced variables until $C^+=C^-$\\
@@ -420,7 +420,7 @@ To remove position singularities, we first BFS triangles on the mesh to rotate t
 %            Set all edges' capacity as $w$ except $\left<s,*\right>$ and $\left<*,t\right>$\\
 %            $f\leftarrow flow(G)$\\
 %            \If {$f=C^+$} {
-%            	\textbf{Break}
+%                \textbf{Break}
 %            }
 %        }
 %        Update variables according to the flow
@@ -432,7 +432,7 @@ To remove position singularities, we first BFS triangles on the mesh to rotate t
 %\begin{figure}
 %\centering
 %\includegraphics[width=\linewidth]{diagram/flipexample.pdf}
-%\caption{Move vertex to reduce triangle inversion. (a) shows how vertex can be moved to shrink the inverted triangle. (b) Vertex movement can cause a new inversion in neighboring triangles, marked as orange in the first row and red in the second row. (c) Vertex movement can produce long edges, marked as orange in the first row and red in the second row. (d) Any movement of vertex at an orientation singularity will violate equality constraints (equation~\eqref{eq:quad-consistent}).}
+%\caption{Move vertex to reduce triangle inversion. (a) shows how vertex can be moved to shrink the inverted triangle. (b) Vertex movement can cause a new inversion in neighboring triangles, marked as orange in the first row and red in the second row. (c) Vertex movement can produce long edges, marked as orange in the first row and red in the second row. (d) Any movement of the vertex at an orientation singularity will violate equality constraints (equation~\eqref{eq:quad-consistent}).}
 %\label{fig:flipexample}
 %\end{figure}
 
@@ -453,19 +453,19 @@ When ${\textbf{d}}_a=\textbf{0}$, we can replace ${\textbf{d}}_b$ by ${\textbf{d
 \label{fig:quad-hierarchy}
 \end{figure}
 
-To build a hierarchy structure, we scan all the edges with $\td_e=\textbf{0}$ at each resolution and collapse them if two corresponding equality constraints of the zero edge are already satisfied. Once we remove the variable for one edge, we do not allow the collapse operation on adjacent edges at the same level. Figure~\ref{fig:quad-hierarchy} shows the number of variables for each level with our collapse operation. We first compute the flow at the lowest resolution, and then propagate the change of variables to the higher resolution until the full flow condition is satisfied.  We keep the edge capacity be two in the multi-resolution solver and only increase it if the full flow condition cannot be satisfied in the highest resolution. In practice, we usually can solve most singularities at the lowest resolution, where the number of variables is less than one-tenth of the number of variables in the original (highest) resolution.  
+To build a hierarchy structure, we loop over all the edges with $\td_e=\textbf{0}$ at each resolution and collapse them if two corresponding equality constraints of the zero-edge are already satisfied. Once we remove the variable for one edge, we do not allow the collapse operation on adjacent edges at the same level. Figure~\ref{fig:quad-hierarchy} shows the number of variables for each level with our collapse operation. We first compute the flow at the lowest resolution and then propagate the change of variables to the higher resolution until the full flow condition is satisfied.  We keep the edge capacity to be two in the multi-resolution solver and only increase it if the full flow condition cannot be satisfied in the highest resolution. In practice, we usually can solve most singularities at the lowest resolution, where the number of variables is less than one-tenth of the number of variables in the original (highest) resolution.  
 
-In the beginning, we use the network simplex implementation from the LEMON library \cite{dezsHo2011lemon} to solve the MCF at the lowest resolution.  This resolves most of singularities with a minimum change of $\td$.  For further trials with large networks, we approximate the MCF problem as a maximum flow problem for efficiency.  We use the Boykov--Kolmogorov algorithm~\cite{boykov2004experimental} if the number of remaining unsatisfied regularity constraints is greater than 10, and use the Edmonds--Karp algorithm~\cite{edmonds1972theoretical} otherwise.  The maximum flow approximation sacrifices some optimality of Equation \eqref{eq:quad-mincost}, but it greatly improves the efficiency and works well in practice, as Section~\ref{sec:quad-methodology} will demonstrate.
+In the beginning, we use the network simplex implementation from the LEMON library \cite{dezsHo2011lemon} to solve the MCF at the lowest resolution.  This resolves most of the singularities with minimum change of $\td$.  For further trials with large networks, we approximate the MCF problem as a maximum flow problem for efficiency.  We use the Boykov--Kolmogorov algorithm~\cite{boykov2004experimental} if the number of remaining unsatisfied regularity constraints is greater than 10, and use the Edmonds--Karp algorithm~\cite{edmonds1972theoretical} otherwise.  The maximum flow approximation sacrifices some optimality of Equation \eqref{eq:quad-mincost}, but it greatly improves the efficiency and works well in practice, as Section~\ref{sec:quad-methodology} will demonstrate.
 
 \paragraph*{Subdivision on Integer Offsets.}
 After the Multi-Resolution MCF, $\|{\textbf{d}}_{uv}\|_{\infty}$ might be greater than $1$ in order to satisfy the full flow condition.  This will complicate the mesh extraction stage later. Therefore, we subdivide the integer offsets of those long edges by adding a midpoint and two new edges. Because we require the lengths of the edges to be integers, the two subdivided edges of ${\textbf{d}}_{uv}$ are computed as ${\textbf{d}}_{uv}\;\text{div}\;2$ and $(-{\textbf{d}}_{uv}+{\textbf{d}}_{uv})\;\text{div}\;2$. Figure~\ref{fig:quad-subdivide} shows an example: the long edge ${\textbf{d}}_{13}=(1,2)$ is divided into ${\textbf{d}}_{15}=(0,1)$ and ${\textbf{d}}_{35}=(-1,-1)$, then $\td_{14}$ and $\td_{23}$ are subdivided.
 
 \subsection{Eliminating Inverted Normals}
 \label{sec:quad-flip}
-To enforce the consistent orientation constraint in Equation~\eqref{eq:quad-noflip}, we employ a two-stage method.  First, a greedy algorithm scans the triangle elements in the mesh and iteratively shrinks the inverted triangles. After that, we locally model Equations~\eqref{eq:quad-consistent} and~\eqref{eq:quad-noflip} as a Boolean satisfiability problem and try to resolve the remaining inversions with a SAT solver.  Using this strategy, we are able to generate inversion-free quad mesh for many testing data, but this is not always guaranteed due to the NP-completeness of the Boolean satisfiability problem.
+To enforce the consistent orientation constraint in Equation~\eqref{eq:quad-noflip}, we employ a two-stage method.  First, a greedy algorithm scans the triangle elements in the mesh and iteratively shrinks the inverted triangles. After that, we locally model Equations~\eqref{eq:quad-consistent} and~\eqref{eq:quad-noflip} as a Boolean satisfiability problem and try to resolve the remaining inversions with an SAT solver.  Using this strategy, we are able to generate an inversion-free quad mesh for many testing data, but this is not always guaranteed due to the NP-completeness of the Boolean satisfiability problem.
 
 \paragraph*{Greedy Method.}
-One way to shrink an inverted triangle is to move one of its vertices to another. To move a vertex from $u$ to $v$, we set ${\d}_{uv}=0$ and modify $u$'s adjacent edges ${\d}_{uw}$ for all $(u,w)\in\mathfrak{E}$ accordingly to maintain the regularity constraints in Equation~\eqref{eq:quad-consistent}.  This operation locally changes the adjacent edges, and thus the area of the adjacent triangles. We scan all the edges of inverted triangles, and shrink an edge only if it does not produce long edges ($\|d^*\|>1$) and reduces the total inverted area.  Our algorithm terminates until no further movement is feasible. This greedy algorithm can efficiently remove most of the inverted triangles. We observe that the remaining inversions are normally located near the orientation singularities.
+One way to shrink an inverted triangle is to move one of its vertices to another. To move a vertex from $u$ to $v$, we set ${\d}_{uv}=0$ and modify $u$'s adjacent edges ${\d}_{uw}$ for all $(u,w)\in\mathfrak{E}$ accordingly to maintain the regularity constraints in Equation~\eqref{eq:quad-consistent}.  This operation locally changes the adjacent edges, and thus the area of the adjacent triangles. We scan all the edges of inverted triangles and shrink an edge only if it does not produce long edges ($\|d^*\|>1$) and reduces the total inverted area.  Our algorithm terminates until no further movement is feasible. This greedy algorithm can efficiently remove most of the inverted triangles. We observe that the remaining inversions are normally located near the orientation singularities.
 
 \paragraph*{Reduction to SAT.}
 To solve the remaining tough inversions,  we model it as a Boolean satisfiability (SAT) problem.  An SAT problem aims at finding an assignment to satisfy a given Boolean equation.  Although the SAT problem has been proven to be NP-complete, researchers have built efficient SAT solvers based on sophisticated heuristics that are able to solve practical problems with tens of thousands of variables.  To turn the constraints in Equations~\eqref{eq:quad-consistent} and~\eqref{eq:quad-noflip} to a Boolean equation, we represent each integer vector variable $\td_{uv}$ with nine Boolean variables $D^{\x}_{uv}$, where $\x \in \mathbf{S} := \{-1, 0, +1\}^2$ represents the nine possible values of the integer vector as these values are guaranteed to be in $\{-1, 0, +1\}$ after the subdivision stage.  The relationship between the integer variable and Boolean variable is
@@ -479,7 +479,7 @@ for all $(u,v)\in\mathfrak{E}$ and $\x \in \mathbf{S}$.  Then we turn the constr
 \end{align*}
 The first Boolean equation enforces the regularity constraint and the second Boolean equation enforces the consistent orientation constraint.  The above representation is more for notation It is a little bit redundant because it needs 9 Boolean variable per integer offset.  We can reduce that to 6 Boolean variables by splitting the dimension of $\x$ for $D^{\x}_{uv}$ so that $D^{\x}_{uv}=:D^{x_1}_{uv}\land D^{x_2}_{uv}$, where $\x=(x_1, x_2)$.
 
-In practice, we find that most triangle inversion problems can be solved locally. That is, it is sufficient to only change the geometry of the nearby regions of the inverted triangles.  So we iteratively increase the diameter of the mutable $\td$ until the resulting SAT problem is feasible or the SAT solver times out.  In our implementation, we use the open source SAT solver \cite{liang2016learning}.  % After enforcing the consistent orientation constraints, we obtain a regular and inversion-free integer offset ${\textbf{d}}^{\star}$.
+In practice, we find that most triangle inversion problems can be solved locally. That is, it is sufficient to only change the geometry of the nearby regions of the inverted triangles.  So we iteratively increase the diameter of the mutable $\td$ until the resulting SAT problem is feasible or the SAT solver times out.  In our implementation, we use the open-source SAT solver \cite{liang2016learning}.  % After enforcing the consistent orientation constraints, we obtain a regular and inversion-free integer offset ${\textbf{d}}^{\star}$.
 
 \subsection{Updating the Continuous Positions}
 \label{sec:quad-postoptimize}
@@ -516,7 +516,7 @@ Our re-optimization can be made to preserve sharp edges in the triangle mesh. We
 
 Our quad mesh extraction algorithm is simpler than that of Jakob et al.~\cite{jakob2015instant}. Because of the subdivision routine described in Section~\ref{sec:quad-maxflow}, our position field (specified by $\p^{\star}$ and ${\textbf{d}}^{\star}$) does not have large integer translations (long edges); specifically, $|{\textbf{d}}^{\star}|_{\infty} \leq 1$. Moreover, as our position field has no singularities, each non-degenerate face is a right-angled isosceles triangle with one hypotenuse and two legs, and two triangles sharing the hypotenuse form a quad.  Hence our mesh extraction algorithm is straightforward: first, collapse all zero-length edges ($e$ for which ${\textbf{d}}_e^{\star} = \textbf{0}$). Then for each hypotenuse edge ($|{\textbf{d}}_e^{\star}|_1 = 2$), extract the quad for its two neighboring triangles. Because we enforce consistent orientation constraints, the quad mesh thus extracted is nearly always manifold. %If the non-manifold edge does exist, we duplicate edge to avoid it.
 
-By comparison, the mesh extraction method for Instant Meshes~\cite{jakob2015instant} must cope with corner cases such as long edges, inverted triangles, and position field singularities. Figure~\ref{fig:quad-fail-face} gives an example for which their implementation has difficulty with a complex geometry, whereas ours produces the correct topology.
+By comparison, the mesh extraction method for Instant Meshes~\cite{jakob2015instant} must cope with corner cases such as long edges, inverted triangles, and position field singularities. Figure~\ref{fig:quad-fail-face} gives an example for which their implementation has difficulty with complex geometry, whereas ours produces the correct topology.
 
 \begin{figure}
 \centering
@@ -640,7 +640,7 @@ QuadriFlow & 8.43 & 0.19 & \textbf{32} & QuadriFlow & 10.0 & \textbf{0.18} & \te
 \end{tabular}
 \end{table*}
 
-\paragraph*{Angle Distortion} is measured as $\sqrt{\frac{1}{N}\sum_{i}(\theta_i-90^\circ)^2}$, where the sum is over all the angles in the mesh and $N$ is their number. Our meshes have less angle distortion than IGM~\cite{bommes2013integer}, and are comparable with Instant Meshes. As Figure~\ref{fig:quad-angle-distortion} shows, the bottom of the Fandisk mesh produced by IGM has large distortion, while ours does not. Instant Meshes usually introduces many unnecessary singularities, especially for irregular shapes.
+\paragraph*{Angle Distortion} is measured as $\sqrt{\frac{1}{N}\sum_{i}(\theta_i-90^\circ)^2}$, where the sum is over all the angles in the mesh and $N$ is their number. Our meshes have less angle distortion than IGM~\cite{bommes2013integer} and are comparable with Instant Meshes. As Figure~\ref{fig:quad-angle-distortion} shows, the bottom of the Fandisk mesh produced by IGM has large distortion, while ours does not. Instant Meshes usually introduces many unnecessary singularities, especially for irregular shapes.
 
 \begin{figure}
 \centering
@@ -664,46 +664,46 @@ QuadriFlow & 8.43 & 0.19 & \textbf{32} & QuadriFlow & 10.0 & \textbf{0.18} & \te
 \label{fig:quad-angle-distortion}
 \end{figure}
 \begin{figure}
- 	\centering
+     \centering
     \begin{minipage}{0.16\textwidth}
- 	\centering
+     \centering
    \includegraphics[width=\textwidth,height=1.33\textwidth]{quadriflow/result/area00.png}\\
    (a) Input triangulation
    \end{minipage}
     \begin{minipage}{0.16\textwidth}
- 	\centering
+     \centering
   \includegraphics[width=\textwidth,height=1.33\textwidth]{quadriflow/result/area01.png}\\
    (b) Integer-Grid Maps
    \end{minipage}
     \begin{minipage}{0.16\textwidth}
- 	\centering
+     \centering
   \includegraphics[width=\textwidth,height=1.33\textwidth]{quadriflow/result/area02.png}\\
    (c) Instant Meshes
    \end{minipage}
     \begin{minipage}{0.16\textwidth}
- 	\centering
+     \centering
   \includegraphics[width=\textwidth,height=1.33\textwidth]{quadriflow/result/area03.png}\\
    (d) QuadriFlow
    \end{minipage}
     \begin{minipage}{0.16\textwidth}
- 	\centering
+     \centering
   \includegraphics[width=\textwidth,height=1.33\textwidth]{quadriflow/teaser/teasers1.png}\\
    (e) QuadriFlow
    \end{minipage}
     \begin{minipage}{0.16\textwidth}
- 	\centering
+     \centering
   \includegraphics[width=\textwidth,height=1.33\textwidth]{quadriflow/teaser/teasers2.png}\\
    (f) QuadriFlow zoom
    \end{minipage}
 
-\caption{Quadrilateral meshes generated by Integer-Grid Maps (IGM)~\cite{bommes2013integer}, Instant Meshes~\cite{jakob2015instant}, and our algorithm QuadriFlow. IGM~(b) sometimes produces badly distorted quadrilaterals. Instant Meshes~(c) produces more vertices of valence 3 or 5. QuadriFlow~(d,~e,~f) produces fewer vertices of irregular valence than Instant Meshes by removing all the singularities from the position field, while producing less distortion than IGM.}
+\caption{Quadrilateral meshes generated by Integer-Grid Maps (IGM)~\cite{bommes2013integer}, Instant Meshes~\cite{jakob2015instant}, and our algorithm QuadriFlow. IGM~(b) sometimes produces badly distorted quadrilaterals. Instant Meshes~(c) produces more vertices of valence 3 or 5. QuadriFlow~(d,~e,~f) produces fewer vertices of irregular valence than Instant Meshes by removing all the singularities from the position field while producing less distortion than IGM.}
 \label{fig:quad-teaser}
 \end{figure}
 \paragraph*{Area Distortion} is the standard deviation of the areas of the quadrilateral faces. As reported by Jakob et al., additional position singularities may alleviate distortion and improve the isotropy of the quad mesh. Our algorithm achieves comparable isotropy without additional position singularities, as Figure~\ref{fig:quad-teaser} shows.
 
 Table~\ref{tab:quad-statistics} suggests that Mixed-Integer Quadrangulation (MIQ)~\cite{bommes2009mixed}, Integer-Grid Map (IGM)~\cite{bommes2013integer}, Instant Meshes~\cite{jakob2015instant}, and our QuadriFlow are the four best methods to discuss in detail. QuadriFlow meshes have slightly larger distortions than Instant Meshes, which is a reasonable price to pay for the dramatic reduction in the number of singularities---in practice, we are able to remove all the singularities from the position field. For the Buddha and Kitten100K models, QuadriFlow outperforms all other methods for singularities, but MIQ and IGM produce fewer singularities for other models.
 
-The cross fields and resolutions of Instant Meshes and QuadriFlow meshes are exactly the same. The comparison meshes generated by other state-of-the-art methods used different cross fields and mesh resolutions. We subdivide their meshes to our resolution, followed by a Laplacian smoothing step. QuadriFlow meshes exhibit angle distortion similar to these methods, but it produces less area distortion, probably due to different cross fields or our MCF problem being easier to solve than the mixed integer programming problems.  For all the models in Table~\ref{tab:quad-statistics}, QuadriFlow is able to generate an inversion-free integer offset ${\textbf{d}}^{\star}$ after enforcing the consistent orientation constraints. % Our quad generation method also guarantees no degenerate singularities. \jw{what is the best term for singularities with valance > 5?}.
+The cross fields and resolutions of Instant Meshes and QuadriFlow meshes are exactly the same. The comparison meshes generated by other state-of-the-art methods used different cross fields and mesh resolutions. We subdivide their meshes to our resolution, followed by a Laplacian smoothing step. QuadriFlow meshes exhibit angle distortion similar to these methods, but it produces less area distortion, probably due to different cross fields or our MCF problem being easier to solve than the mixed-integer programming problems.  For all the models in Table~\ref{tab:quad-statistics}, QuadriFlow is able to generate an inversion-free integer offset ${\textbf{d}}^{\star}$ after enforcing the consistent orientation constraints. % Our quad generation method also guarantees no degenerate singularities. \jw{what is the best term for singularities with valance > 5?}.
 
 % \paragraph*{Number of Singularities.}
 Figure~\ref{fig:quad-singularity} plots the number of singularities in meshes of the Knot1 model (illustrated in Figure~\ref{fig:quad-shape-feature}) with respect to the target number of vertices. The blue bars count the number of orientation singularities for QuadriFlow, which produces no position singularities. The orange bars count the number of orientation singularities for Instant Meshes, and the green bars count the sum of orientation and position singularities for Instant Meshes. The number of position singularities in Instant Meshes increases linearly with the mesh density, which is one of its weaknesses.
@@ -741,7 +741,7 @@ Because we use the extrinsic formulations from Instant Meshes, our mesh edges al
 \label{fig:quad-shape-feature}
 \end{figure}
 
-We compare Instant Meshes, Integer-Grid Map, and QuadriFlow in a subclass of ShapeNet with 110 challenging car models that the implementation of MIQ~\cite{bommes2009mixed} in \texttt{libigl} cannot handle. As before, the resolutions and the cross fields of the Instant Meshes and QuadriFlow meshes remain identical to each other, whereas we subdivide and smooth the Integer-Grid Map meshes to the same resolution. We do not have room to list all the models, so Table~\ref{tab:quad-car-compare} shows only the percentage of meshes for which QuadriFlow outperforms Instant Meshes or IGM according to the specified measure. Note that there are models for which these two methods cannot produce reasonable meshes (see Section~\ref{quad-robustness}); though QuadriFlow can mesh all the models well, we omit from the comparison models for which one of the other methods produce conspicuous visual artifacts. Table~\ref{tab:quad-car-compare} indicates that QuadriFlow meshes exhibit less distortion than IGM, but more than Instant Meshes. For most models, we attain the minimum number of singularities. Figure~\ref{fig:quad-challenge} illustrates several of our meshes, with the models kindly supplied by Jakob et al.\ or ShapeNet.
+We compare Instant Meshes, Integer-Grid Map, and QuadriFlow in a subclass of ShapeNet with 110 challenging car models that the implementation of MIQ~\cite{bommes2009mixed} in \texttt{libigl} cannot handle. As before, the resolutions and the cross fields of the Instant Meshes and QuadriFlow meshes remain identical to each other, whereas we subdivide and smooth the Integer-Grid Map meshes to the same resolution. We do not have room to list all the models, so Table~\ref{tab:quad-car-compare} shows only the percentage of meshes for which QuadriFlow outperforms Instant Meshes or IGM according to the specified measurements. Note that there are models for which these two methods cannot produce reasonable meshes (see Section~\ref{quad-robustness}); though QuadriFlow can mesh all the models well, we omit from the comparison models for which one of the other methods produce conspicuous visual artifacts. Table~\ref{tab:quad-car-compare} indicates that QuadriFlow meshes exhibit less distortion than IGM, but more than Instant Meshes. For most models, we attain the minimum number of singularities. Figure~\ref{fig:quad-challenge} illustrates several of our meshes, with the models kindly supplied by Jakob et al.\ or ShapeNet.
 
 \begin{table}
 \caption{Comparisons tabulating the percentage of 110 ShapeNet car models for which QuadriFlow outperforms Integer-Grid Maps (IGM) or Instant Meshes based on the angle distortion, the area distortion, or the number of singularities. We exclude models on which IGM or Instant Meshes fails to produce a usable mesh. Instant Meshes have the least distortion, whereas QuadriFlow meshes have the fewest singularities.
@@ -777,14 +777,14 @@ Recall from Table~\ref{tab:quad-car-compare} that we tested Instant Meshes and I
 
 \subsection{Efficiency}
 
-In Figure~\ref{fig:quad-Timing}, we chart running times of several stages of QuadriFlow as a function of the number of input triangular faces. The input is the Hand model from IGM~\cite{bommes2013integer}, subdivided to obtain a suitable number of faces. We implemented Instant Meshes using CUDA with a GTX 1070 GPU, and ran our implementation on a 2.4 GHz CPU with a single thread. Our implementation has speed comparable to the fastest existing method~\cite{ebke2016interactively}, which runs on a decimated mesh and maps back to the original resolution. They report 5.7 seconds to mesh a model with 0.84 million faces, while directly processing it with a state-of-the-art global method~\cite{ebke2014level} takes 161 seconds. We take only 5 seconds to process 0.86 million faces, and 20 seconds for 2.43 million faces.
+In Figure~\ref{fig:quad-Timing}, we chart running times of several stages of QuadriFlow as a function of the number of input triangular faces. The input is the Hand model from IGM~\cite{bommes2013integer}, subdivided to obtain a suitable number of faces. We implemented Instant Meshes using CUDA with a GTX 1070 GPU and ran our implementation on a 2.4 GHz CPU with a single thread. Our implementation has speed comparable to the fastest existing method~\cite{ebke2016interactively}, which runs on a decimated mesh and maps back to the original resolution. They report 5.7 seconds to mesh a model with 0.84 million faces, while directly processing it with a state-of-the-art global method~\cite{ebke2014level} takes 161 seconds. We take only 5 seconds to process 0.86 million faces, and 20 seconds for 2.43 million faces.
 
 In our experiments, the cost of MIQ~\cite{bommes2009mixed} as implemented in \texttt{libigl} varies a lot for different models. It takes over two minutes to process 14,000 faces, and more than two hours for 100,000 faces for the Gargoyle model~\cite{tarini2010practical}. On our 110-car dataset, IGM takes 50 to 600 seconds to process each model, while our method meshes each model in at most 10 seconds.
 
 \subsection{Methodology}
 \label{sec:quad-methodology}
 
-Recall that our algorithm introduces an ILP approximation of an MIP problem, then formulates it as an MCF problem, which is also approximate because of the need to fix some integer offsets to balance the variables. Here we evaluate the influence of these approximations on the mesh quality.
+Recall that our algorithm introduces an ILP approximation of a MIP problem, then formulates it as an MCF problem, which is also approximate because of the need to fix some integer offsets to balance the variables. Here we evaluate the influence of these approximations on the mesh quality.
 
 \paragraph*{ILP Approximation.} Instead of jointly optimizing the continuous energy and integer constraints with MIP, we approximate the MIP problem with an ILP problem. Because we do not directly optimize the energy, the ILP solution might not obtain the best energy. This can cause a loss of geometric details when the mesh is coarse. Figure~\ref{fig:quad-coarse} shows the QuadriFlow meshes for the Hand model with different choices of mesh density. At the coarsest resolution, QuadriFlow loses four fingers.
 

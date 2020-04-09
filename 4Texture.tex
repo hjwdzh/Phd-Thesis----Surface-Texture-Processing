@@ -1,18 +1,18 @@
 \chapter{Texture Reconstruction}
 \label{chapter:texture-recon}
-In this chapter, we mainly study the texture reconstruction problem in two different ways. Section~\ref{sec:toptim} presents \emph{3DLite} that produces abstracted scene with completed planar geometry with high-quality texture. Section~\ref{sec:tadv} discusses a novel method that jointly optimize the texture with an adversarial learned metric that tolerates scanning errors.
+In this chapter, we mainly study the texture reconstruction problem in two different ways. Section~\ref{sec:toptim} presents \emph{3DLite} that produces abstracted scene with completed planar geometry with high-quality texture. Section~\ref{sec:tadv} discusses a novel method that jointly optimizes the texture with an adversarial learned metric that tolerates scanning errors.
 
 \section{Texture Optimization with Explicit Model}
 \label{sec:toptim}
 
 \subsection{Overview}
 \begin{figure}
-	\centering
-	\includegraphics[width=\textwidth]{3dlite/fig2.png}
-	\caption{Framework overview: our method takes a set of RGB-D frames as input, from which we compute a primitive abstraction that is used to optimize for sharp surface textures and infer missing scene parts. In the end, we obtain a low-polygonal, lightweight 3D reconstruction.
-	}
-%	\vspace{-0.2cm}	
-	\label{fig:3dlite-overview}
+    \centering
+    \includegraphics[width=\textwidth]{3dlite/fig2.png}
+    \caption{Framework overview: our method takes a set of RGB-D frames as input, from which we compute a primitive abstraction that is used to optimize for sharp surface textures and infer missing scene parts. In the end, we obtain a low-polygonal, lightweight 3D reconstruction.
+    }
+%    \vspace{-0.2cm}    
+    \label{fig:3dlite-overview}
 \end{figure}
 From an input RGB-D video, 3DLite\footnote{This section is mainly based on our work~\cite{huang20173dlite}.} first computes a primitive-based abstraction of the scene, and then leverages this representation to optimize for high-quality texture maps, as well as complete holes in the scene with both geometry and color; see Fig.~\ref{fig:3dlite-overview}.
 We capture the input RGB-D stream with a handheld, consumer-grade RGB-D sensor.
@@ -27,12 +27,12 @@ To this end, we build upon the approach of Zhou and Koltun~\cite{zhou2014color} 
 For our large-scale scanning scenario, we introduce sparse color feature and geometric primitive constraints to help bring the optimization into the basin of convergence of a dense photometric consistency energy (see section~\ref{subsec:3dlite-color-align}).
 In order to account for motion blur in input color images, we introduce a method to sharpen color projected from input frames to the model.
 Rather than select sharpest keyframes throughout the input video, which may still select relatively blurry frames or lose color information by filtering out too many frames, we seek sharp image regions, from which we formulate a graph-cut based optimization for image sharpness and coherence (see section~\ref{subsec:3dlite-color-sharp}). 
-%\angie{plz check this sharpening part} \jingweiNote{Additionally, we select $\triangle I$ from sharpest region, and optimize the final texture combining $\triangle I$ and averaged color. Do we describe it here?}
+%\angie{plz check this sharpening part} \jingweiNote{Additionally, we select $\triangle I$ from the sharpest region, and optimize the final texture combining $\triangle I$ and averaged color. Do we describe it here?}
 This leads to a high-quality texture map over the known geometry.
 
 We then complete the textured model to fill holes that were occluded or unseen in the original scan.
 While general, high-resolution scene completion is a very challenging task, our primitive-based abstraction enables effective hole-filling for both geometry and color on our scene representation.
-To complete the geometry of the model, we extrapolate primitives in unobserved space according to the camera trajectory, such that each primitive meets either another primitive or empty space (see section~\ref{subsec:3dlite-extrapolate}). %\angie{is this actually true? also are we doing things different from dzitsiuk2016noising?} \jingweiNote{We extrapolate two planes to connect them, otherwise we don't extrapolate any plane even if there is unobserved space. Should be similar to dzitsiuk2016noising, but they really don't have a good explanation on this part.}
+To complete the geometry of the model, we extrapolate primitives in unobserved space according to the camera trajectory, such that each primitive meets either another primitive or empty space (see section~\ref{subsec:3dlite-extrapolate}). %\angie{is this actually true? also, are we doing things different from dzitsiuk2016noising?} \jingweiNote{We extrapolate two planes to connect them, otherwise, we don't extrapolate any plane even if there is unobserved space. Should be similar to dzitsiuk2016noising, but they really don't have a good explanation on this part.}
 We then complete the color in these regions through image inpainting, following  Image Melding~\cite{darabi2012image} (see section~\ref{subsec:3dlite-inpaint}).
 This produces a clean, complete, lightweight model mapped with sharp textures.
 \section{Primitive-Based Abstraction}
@@ -46,7 +46,7 @@ To compute our primitive-based abstraction of a scanned scene, we first detect p
 From an input RGB-D video sequence comprised of a set of depth and color frames $\{f_i = (\mathcal{C}_i, \mathcal{D}_i)\}$, we first use a state-of-the-art RGB-D reconstruction system to obtain initial camera poses $T_i$ (frame-to-world) for each frame, and an initial surface $\mathcal{S}_0$.
 For each frame, we detect planes using the fast plane extraction of Feng et al.~\cite{feng2014fast}. 
 Instead of detecting planes directly on the input sensor depth, which is noisy and often contains holes, we operate on depth rendered from $\mathcal{S}_0$.
-This rendered depth contains data accumulated over previous frames, which regularizes out noise and incorporates more information than a single input depth map, and is also well-aligned to the model geometry $\mathcal{S}_0$.
+This rendered depth contains data accumulated over previous frames, which regularizes out the noise and incorporates more information than a single input depth map, and is also well-aligned to the model geometry $\mathcal{S}_0$.
 For each detected plane $\mathcal{P}_k$ in frame $f_i$, we additionally store two terms containing information used for primitive merging and structural refinement, as described in Secs.~\ref{subsec:3dlite-plane-classify} and Sec.~\ref{subsec:3dlite-color-align}.
 \begin{itemize}
     \item Plane parameter: $p=(n_x,n_y,n_z,w)$ where $\mathbf{n} = (n_x,n_y,n_z)$ is the unit normal. It represents the plane $\mathbf{n}\cdot \mathbf{x} + w=0$ in the camera space of $f_i$. 
@@ -60,21 +60,21 @@ For each detected plane $\mathcal{P}_k$ in frame $f_i$, we additionally store tw
 We need to aggregate the per-frame planar regions into a set of plane primitives representing the planes in the 3D scene.
 Two planar regions $\mathcal{P}_k$ from frame $f_i$ and $\mathcal{P}_l$ from frame $f_j$ are determined to be the same primitive if they are close and have enough overlap. 
 We consider $\mathcal{P}_k$ and $\mathcal{P}_l$ to be close if $\max(\textrm{ASD}_{k\rightarrow l}, \textrm{ASD}_{l\rightarrow k}) < \tau_c$ (in practice, we use $\tau_c = 0.05$m).
-Overlap is computed by transforming $\mathcal{P}_k$ and into the camera space of $f_j$ and computing the percentage of overlapping pixels relative to the minimum number of pixels belonging to $\mathcal{P}_k$ and $\mathcal{P}_l$.
+The overlap is computed by transforming $\mathcal{P}_k$ and into the camera space of $f_j$ and computing the percentage of overlapping pixels relative to the minimum number of pixels belonging to $\mathcal{P}_k$ and $\mathcal{P}_l$.
 If this overlap percentage is greater than $\tau_o$ (we use $\tau_o = 0.3$), the regions are considered to overlap.
 
 We perform this merging step hierarchically.
-For key frames at interval $n = 10$ frames, we merge planes within each key frames' set of $n$ frames, and then merge planes among all key frames.
+For keyframes at interval $n = 10$ frames, we merge planes within each keyframes' set of $n$ frames, and then merge planes among all keyframes.
 Each frame then contains a set of plane primitives labeled according to the resulting merged set.
 By projecting the merged primitive labels from the frames onto $\mathcal{S}_0$, we obtain a primitive decomposition of the scene. 
 Note that regions with multiple different primitive label assignments (typically occurring near intersections of different primitive) are removed from the primitive set.
-Fig.~\ref{fig:3dlite-plane-classify} shows an example primitive decomposition of an office scan, with different primitive denoted by different colors, and gray denoting no label assignment.
+Fig.~\ref{fig:3dlite-plane-classify} shows an example of primitive decomposition of an office scan, with different primitive denoted by different colors, and gray denoting no label assignment.
  
 \begin{figure}
     \centering
     \includegraphics[width=0.97\linewidth]{3dlite/fig3.png}
     \caption{
-    	Primitive decomposition: each plane primitive is denoted with a different color. Gray indicates no primitive association.
+        Primitive decomposition: each plane primitive is denoted with a different color. Gray indicates no primitive association.
     }
     \label{fig:3dlite-plane-classify}
 
@@ -84,17 +84,17 @@ To filter out any potential outliers from the primitive classification projectio
 For a plane primitive $\mathcal{P}_k$, we check for outliers by randomly selecting $3$ of its associated vertices in $\mathcal{S}_0$ and fitting a plane $\mathcal{P}_k'$ to these vertices. 
 A point is then considered an inlier for $\mathcal{P}_k'$ if its distance is smaller than $\tau_i$. 
 Since $\mathcal{S}_0$ often contains warping in large plane primitives due to sensor noise and distortion, as well as camera pose micro-drift, we conservatively set $\tau_i = 0.1$m.
-We repeat this process for $128$ iterations, and update $\mathcal{P}_k$ with the best fitting plane to the largest set of inliers in the least squares sense.
+We repeat this process for $128$ iterations and update $\mathcal{P}_k$ with the best fitting plane to the largest set of inliers in the least-squares sense.
 
 \subsubsection{Structural Refinement}
 \label{sec:fit-refine}
 
-Since we use a relatively conservative inlier threshold to compute the plane primitives, planes which should be orthogonal or parallel to each other are typically off by a few degrees.
+Since we use a relatively conservative inlier threshold to compute the plane primitives, planes that should be orthogonal or parallel to each other are typically off by a few degrees.
 We thus perform a structure refinement optimization on the planar primitives to encourage them to conform to a Manhattan world.
 Similar to Halber and Funkhouser~\cite{halber2016fine}, we formulate an energy minimization using parallel and orthogonal constraints:
 
 \begin{align}
-	E_s &= E_d + \lambda E_a\, \\
+    E_s &= E_d + \lambda E_a\, \\
     E_d &= \sum_{i}^{\#\textrm{planes}} \sum_{j}^{\#\textrm{plane verts}} D(\mathcal{P}_i,v_{ij})^2\,,\\
     E_a &= \sum_{i,j\in \Omega} |A(\mathcal{P}_i,\mathcal{P}_j)-90\cdot n_{ij}|^2\,.
 \end{align}
@@ -125,7 +125,7 @@ In our texture optimization step, we directly address these problems with a text
     \label{fig:3dlite-color-boundary-refine}
 \end{figure}
 Since we originally detected plane primitives from rendered depth (Sec.~\ref{subsec:3dlite-plane-detect}), there may be some disagreement along primitive boundaries with the input RGB-D frame.
-Thus pixels that are close to primitive boundaries are easily mis-classified, and we must re-classify them to agree with the input color images. 
+Thus pixels that are close to primitive boundaries are easily misclassified, and we must re-classify them to agree with the input color images. 
 To ensure that primitive labels are coherent in the image domain and maintain boundaries consistent with the input color frames, we formulate a graph-cut~\cite{boykov2001fast} based energy minimization problem:
 \begin{equation}
 E_l = \sum_p D(p, l_p) + \sum_{p,q} V_{pq}\delta(l_p,l_q)\,.
@@ -148,8 +148,8 @@ In solving for a texture mapping, it is important to ensure consistent color acr
 This can be achieved by transferring colors with a mapping function.
 For example, NRDC~\cite{hacohen2011non} search for correspondences between images, and optimizes for such a mapping function to transfer color style from one image to another.
 In the scenario of RGBD scanning, correspondences can be easily acquired from camera poses and geometry. 
-Zhang et al.~\cite{zhang2016emptying} solves the problem by minimizing vertex radiance error viewed from different color frames, given the exposure. 
-In order to model white balance and exposure changes, we refer to the NRDC model to transfer colors using three spline curves ($B_j(r,g,b)=(B^1_j(r),B^2_j(g),B^3_j(b))$) for the rgb channels of the $j$-th frame. 
+Zhang et al.~\cite{zhang2016emptying} solve the problem by minimizing vertex radiance error viewed from different color frames, given the exposure. 
+In order to model white balance and exposure changes, we refer to the NRDC model to transfer colors using three spline curves ($B_j(r,g,b)=(B^1_j(r),B^2_j(g),B^3_j(b))$) for the RGB channels of the $j$-th frame. 
 Then for a 3D point $p_i$ and it's corresponding pixels $\{q_{ij}\}$ in frames $\{j\}$ under the current camera poses, we want the color $C(p_i)$ to be close to $B_j(q_{ij})$:
 \begin{equation}
 E_t = \sum_{i} \sum_{j} ||C(p_i) - B_j(q_{ij})||^2 + \lambda \sum_{i} \sum_{j} (B_j'(x_i)-1)^2\,.
@@ -170,8 +170,8 @@ However, their optimization relies on dense photometric error, which has a relat
 For our large-scale scanning scenario, this energy is not very robust to the variance in initial camera poses.
 
 In our formulation, we solve for a set of camera parameters for each frame separately from non-rigid correction, which we found to be more effective in practice. 
-We adopt the idea of EM optimization with the help of dense color errors from Zhou and Koltun, and solve to maximize photo-consistency.
-To aid convergence, we additionally introduce sparse feature and primitive-based constraints into the optimization.
+We adopt the idea of EM optimization with the help of dense color errors from Zhou and Koltun and solve to maximize photo-consistency.
+To aid convergence, we additionally introduce sparse features and primitive-based constraints into the optimization.
 Thus our energy is defined as
 $$ E(\mathbf{T})=E_c(\mathbf{T}) + \lambda_s E_s(\mathbf{T}) + \lambda_p E_p(\mathbf{T})\,, $$
 where $E_c$ represents the dense photometric energy, $E_s$ the sparse feature term, and $E_p$ primitive relationship constraints, and we solve for rigid camera poses (camera-to-world) $\mathbf{T}=\{T_i\}$ for each frame.
@@ -229,20 +229,20 @@ E_w(\xi) &= \sum_{i} ||C(p_i) - \sum_j I_j(\xi(\pi\cdot T_j^{-1}p_i))||^2 \\
 \end{align}
 regularizing the warping by restricting the neighbor grid points' offset to be close to the original state. 
 For our experiments, we use $\lambda = 0.3$.
-Note that we do not include $E_s$ and $E_g$ in this optimization, as $E_g$ is not changed by local image warping and the sparse features of $E_s$ are already aligned, and dense color error will also restrict these alignments to be fixed. \angie{not sure what the second half of the sentence means, regarding dense and sparse errors} \jingweiNote{Maybe we can throw it out. I mean the warping optimization won't make the sparse feature misaligned, because dense color constraints is usually consistent with sparse feature constraints (maybe it is not always true, so we remove it?.)}
+Note that we do not include $E_s$ and $E_g$ in this optimization, as $E_g$ is not changed by local image warping and the sparse features of $E_s$ are already aligned, and dense color error will also restrict these alignments to be fixed. \angie{not sure what the second half of the sentence means, regarding dense and sparse errors} \jingweiNote{Maybe we can throw it out. I mean the warping optimization won't make the sparse feature misaligned, because dense color constraints are usually consistent with sparse feature constraints (maybe it is not always true, so we remove it?.)}
 \end{comment}
 
 \subsubsection{Texture Sharpening}
 \label{subsec:3dlite-color-sharp}
 Motion blur is a common problem when capturing handheld video using commodity RGB-D sensors.
 Even with perfect alignment of camera frames, a blurry image can still significantly decrease the quality of the model color. 
-Most existing scanning methods average colors from all corresponding frames, or update the color online with a weighted combination. 
-In order to mitigate this issue, the color map optimization of Zhou and Koltun~\cite{zhou2014color} selects sharpest keyframes every 1 to 5 seconds, with sharpness of a frame evaluated using the method by Crete et al.~\cite{crete2007blur}. 
-However, when we applied this to our scenario, not all blurry frames were filtered out, and if keyframes were selected with interval greater than 1 second, color information was lost in some regions. 
+Most existing scanning methods average colors from all corresponding frames or update the color online with a weighted combination. 
+In order to mitigate this issue, the color map optimization of Zhou and Koltun~\cite{zhou2014color} selects the sharpest keyframes every 1 to 5 seconds, with the sharpness of a frame evaluated using the method by Crete et al.~\cite{crete2007blur}. 
+However, when we applied this to our scenario, not all blurry frames were filtered out, and if keyframes were selected with an interval greater than 1 second, color information was lost in some regions. 
 In fact, in the room-scale setting, this tends to preserve views where the camera is closer to the scene, as such images typically have more objects and thus higher color variance.
 However, we wish to preserve cameras with closer views to the scene, which capture textures with more detail.
 Thus we instead aim to only map the sharpest regions of the images onto the geometry; i.e., for each primitive in $\mathcal{S}_p$ we map the sharpest region of color from any single image.
-To this end, we consider both image pixel sharpness and image region sharpness in order to select key frames at an intervals of [10,20] frames.
+To this end, we consider both image pixel sharpness and image region sharpness in order to select keyframes at intervals of [10,20] frames.
 For image pixel sharpness, we use the metric of \cite{vu2012bf}, and for image region sharpness we consider both pixel sharpness and visual density, where visual density measures the quality of the view of a pixel (accounting for far distances and glancing angles), and is defined as
 \begin{equation}
 r_j(p_i) = \left((T_j^{-1}\pi^{-1}(p_i))\big|_z\right)^{-2} \cdot \cos(\mathbf{r}\cdot \mathbf{n})\,,
@@ -292,31 +292,31 @@ As shown in Fig.~\ref{fig:3dlite-sharp-poisson}, this maintains sharpness while 
 \label{sec:completion}
 
 While our texture-optimized, lightweight mesh contains sharp, compelling color, it nonetheless remains incomplete, due to occlusions or limited scanning coverage.
-3D completion is a challenging task, as it typically requires example-based learning techniques~\cite{dai2017complete}, and the problem becomes cubically more complex with  higher resolutions and larger spatial extents.
+3D completion is a challenging task, as it typically requires example-based learning techniques~\cite{dai2017complete}, and the problem becomes cubically more complex with higher resolutions and larger spatial extents.
 We thus exploit our planar primitive abstraction to simplify 3D scene completion in both geometry and color.%, as it can be extrapolated to 
 \begin{figure}
-	\centering
+    \centering
     \includegraphics[width=0.8\linewidth]{3dlite/fig7.png}
-	\caption{Primitive fitting and extrapolation: (a) After primitive fitting and structural refinement, we project vertices to the primitives, producing a clean mesh. (b) We extrapolate primitives in occluded regions to close the surface.}
-	\label{fig:3dlite-plane-fit}
+    \caption{Primitive fitting and extrapolation: (a) After primitive fitting and structural refinement, we project vertices to the primitives, producing a clean mesh. (b) We extrapolate primitives in occluded regions to close the surface.}
+    \label{fig:3dlite-plane-fit}
 \end{figure}
 
 \subsubsection{Geometry Completion}
 \label{subsec:3dlite-extrapolate}
 \begin{figure}
-	\centering
-	\includegraphics[width=0.8\linewidth]{3dlite/fig9.png}
-	\caption{An example of extrapolation and hole filling. Left: Green lines represent possible intersections between sets of planes. Blue represents the original scene geometry, red the extrapolated regions, yellow removed original geometry extending past intersections, gray known empty space, and white self-contained holes which were filled. Right: Completed plane primitive with texture.}
-	\label{fig:3dlite-plane-fill}
+    \centering
+    \includegraphics[width=0.8\linewidth]{3dlite/fig9.png}
+    \caption{An example of extrapolation and hole filling. Left: Green lines represent possible intersections between sets of planes. Blue represents the original scene geometry, red the extrapolated regions, yellow removed original geometry extending past intersections, gray known empty space, and white self-contained holes which were filled. Right: Completed plane primitive with texture.}
+    \label{fig:3dlite-plane-fill}
 \end{figure}
 
 A plane-based primitive abstraction enables geometry completion by plane extrapolation in unseen regions~\cite{dzitsiuk2016noising}.
 We use several rules to guide our completion approach, visualized in Fig.~\ref{fig:3dlite-extrap-illus}:
 \begin{itemize}
-	\item Two planes should be extrapolated to their intersection if the extrapolated area is unobserved.
-	\item If three planes will intersect each other, extrapolate them to meet at a corner if the extrapolated area is unobserved.
-	\item No planes should be extrapolated into open space (observed to be empty). Note that we use the initial TSDF to determine known occupied, known empty, and unobserved space, according to the camera trajectory.
-	\item Holes self-contained in a plane should be filled if they are in unobserved space.
+    \item Two planes should be extrapolated to their intersection if the extrapolated area is unobserved.
+    \item If three planes will intersect each other, extrapolate them to meet at a corner if the extrapolated area is unobserved.
+    \item No planes should be extrapolated into open space (observed to be empty). Note that we use the initial TSDF to determine known occupied, known empty, and unobserved space, according to the camera trajectory.
+    \item Holes self-contained in a plane should be filled if they are in unobserved space.
 \end{itemize}
 
 We search for all pairs of planes satisfying the first rule and extrapolate them. 
@@ -328,10 +328,10 @@ Note that while this process achieves successful completion for scenes in which 
 Figs.~\ref{fig:3dlite-plane-fit} and \ref{fig:3dlite-plane-fill} demonstrate our extrapolation and hole-filling to generate complete scenes.
 
 \begin{figure}
-	\centering
-	\includegraphics[width=0.8\linewidth]{3dlite/fig8.png}
-	\caption{Rules for plane extrapolation. (a) Two planes should extrapolate to their intersection. (b) Three planes should extrapolate to their intersection. (c) No planes should be extrapolated through known empty space. (d) Extrapolation (light red) can be viewed as a certain boundary (red) extending in the direction (blue) orthogonal to the intersection line. (e) A more complex example, showing invalidation of potential extrapolation due to known empty space. Only the blue regions should be extended towards the intersection.}
-	\label{fig:3dlite-extrap-illus}
+    \centering
+    \includegraphics[width=0.8\linewidth]{3dlite/fig8.png}
+    \caption{Rules for plane extrapolation. (a) Two planes should extrapolate to their intersection. (b) Three planes should extrapolate to their intersection. (c) No planes should be extrapolated through known empty space. (d) Extrapolation (light red) can be viewed as a certain boundary (red) extending in the direction (blue) orthogonal to the intersection line. (e) A more complex example, showing invalidation of potential extrapolation due to known empty space. Only the blue regions should be extended towards the intersection.}
+    \label{fig:3dlite-extrap-illus}
 \end{figure}
 
 \subsection{Texture Completion}
@@ -339,17 +339,17 @@ Figs.~\ref{fig:3dlite-plane-fit} and \ref{fig:3dlite-plane-fill} demonstrate our
 Our plane-based primitive abstraction reduces the 3D texture completion problem into a two-dimensional one over plane textures.
 As this texture synthesis problem is a classical one and has been well-studied~\cite{criminisi2004region,simakov2008summarizing,barnes2009patchmatch,darabi2012image,wang2016unsupervised,pathak2016context,yang2016high}, we employ state-of-the-art image inpainting techniques to complete texture in geometry-extrapolated regions.
 
-Although recent deep learning based methods have shown impressive results, they require a large training set and are mostly constrained to fixed image resolutions. 
+Although recent deep learning-based methods have shown impressive results, they require a large training set and are mostly constrained to fixed image resolutions. 
 Thus we use Image Melding~\cite{darabi2012image}, a patch-based approach incorporating image transforms and gradients into a mixed $\ell_2/\ell_0$ optimization to achieve high-quality image inpainting.
 We found the method to work well for most cases, except when there are incomplete regions of a texture which cover a distinct foreground and smooth background, or when there are shadows on the background, as shown in Fig.~\ref{fig:3dlite-synthesize}(b).
 In these cases, we detect the background using image segmentation~\cite{felzenszwalb2004efficient}, and extend it to fill the entire image using laplacian smoothing (Fig.~\ref{fig:3dlite-synthesize}(c)).
 We then combine the synthesized background with the foreground (Fig.~\ref{fig:3dlite-synthesize}(d)), and synthesize pixels less than $10$ pixels from the foreground using Image Melding (Fig.~\ref{fig:3dlite-synthesize}(e)).
 
 \begin{figure}
-	\centering
+    \centering
     \includegraphics[width=0.8\linewidth]{3dlite/fig10.png}
-	\caption{Texture completion. (a) Original texture with green denoting regions to be synthesized. (b) Direct application of Image Melding~\cite{darabi2012image}. (c) Background color estimation. (d) Combined background and original texture. (e) Remaining pixels inpainted with Image Melding.}
-	\label{fig:3dlite-synthesize}
+    \caption{Texture completion. (a) Original texture with green denoting regions to be synthesized. (b) Direct application of Image Melding~\cite{darabi2012image}. (c) Background color estimation. (d) Combined background and original texture. (e) Remaining pixels inpainted with Image Melding.}
+    \label{fig:3dlite-synthesize}
 \end{figure}
 
 \subsection{Mesh Generation}
@@ -393,7 +393,7 @@ All scans were captured using a \emph{Structure Sensor}\footnote{https://structu
 We use $640\times 480$ color and depth, synchronized at $30$Hz.
 Note that we are agnostic to the type of RGB-D sensor used.
 For each scan, we compute the initial camera poses using BundleFusion. 
-All 3DLite experiments  were performed on an Intel Core i7 2.6GHz CPU, with each scan taking on average 5 hours to process.
+All 3DLite experiments were performed on an Intel Core i7 2.6GHz CPU, with each scan taking on average 5 hours to process.
 Detailed timings are shown in Table~\ref{table:3dlite-timing}.
 \begin{table}
 \center
@@ -437,21 +437,21 @@ Boundary(s) & 1.219 & 0.921 & 1.406 & 2.016 & 3.725\\
 \emph{Qualitative comparison.}
 We first compare our lightweight, textured meshes of 10 scenes with 3D reconstructions computed using BundleFusion and VoxelHashing~\cite{niessner2013real}.
 Note that since BundleFusion's online re-integration updates use color discretized to bytes, there may be some small color artifacts in the resulting reconstruction, so we first run BundleFusion to obtain camera poses and then compute a surface reconstruction with VoxelHashing.
-As shown in Figs.~\ref{fig:3dlite-result-model} and \ref{fig:3dlite-result-tex}, even with simplified geometry, our high quality textures provide visually compelling results on completed scenes, drastically reducing various color oversmoothing artifacts.
+As shown in Figs.~\ref{fig:3dlite-result-model} and \ref{fig:3dlite-result-tex}, even with simplified geometry, our high-quality textures provide visually compelling results on completed scenes, drastically reducing various color oversmoothing artifacts.
 
 \begin{figure}[!htb]
    \begin{minipage}{0.49\textwidth}
      \centering
-	\includegraphics[width=\linewidth]{3dlite/fig13.png}
-	\caption{Reconstructed meshes with high-quality surface textures. 
-		3DLite produces completed scenes while significantly reducing color artifacts compared to reconstructions generated with BundleFusion~\cite{dai2016bundlefusion} and VoxelHashing~\cite{niessner2013real}.
-	}
-	\label{fig:3dlite-result-model}
+    \includegraphics[width=\linewidth]{3dlite/fig13.png}
+    \caption{Reconstructed meshes with high-quality surface textures. 
+        3DLite produces completed scenes while significantly reducing color artifacts compared to reconstructions generated with BundleFusion~\cite{dai2016bundlefusion} and VoxelHashing~\cite{niessner2013real}.
+    }
+    \label{fig:3dlite-result-model}
    \end{minipage}\hfill
    \begin{minipage}{0.49\textwidth}
-	\includegraphics[width=\linewidth]{3dlite/fig14.png}
-	\caption{Zoomed-in views showing our reconstructed 3d models compared to reconstructions produced by BundleFusion~\cite{dai2016bundlefusion} and VoxelHashing~\cite{niessner2013real}.}
-	\label{fig:3dlite-result-tex}
+    \includegraphics[width=\linewidth]{3dlite/fig14.png}
+    \caption{Zoomed-in views showing our reconstructed 3d models compared to reconstructions produced by BundleFusion~\cite{dai2016bundlefusion} and VoxelHashing~\cite{niessner2013real}.}
+    \label{fig:3dlite-result-tex}
    \end{minipage}
 \end{figure}
 
@@ -502,7 +502,7 @@ Compared to traditional plane fitting using RANSAC, our method is more robust in
 We analyze our color alignment approach, showing the effect of our sparse and primitive geometry terms in Fig.~\ref{fig:3dlite-eval-align-rigid} (optimizing for rigid poses only).
 Without color optimization, the result contains oversmoothing and ghosting. 
 Optimizing for rigid poses under a dense photometric error using Zhou and Koltun~\cite{zhou2014color} sharpens the image but still retains some artifacts where initial camera poses were too far from the basin of convergence.
-Our new terms are able to bring the optimization to a precise alignment of color frames.
+Our new terms are able to bring optimization to the precise alignment of color frames.
 
 \begin{figure}
 \begin{minipage}{0.49\linewidth}
@@ -527,10 +527,10 @@ Our new terms are able to bring the optimization to a precise alignment of color
 \label{fig:3dlite-eval-complete}
 \end{minipage}
 \begin{minipage}{0.49\linewidth}
-	\centering
+    \centering
     \includegraphics[width=\linewidth]{3dlite/fig21.png}
 \caption{Limitations of our method. (a) Geometry entirely unseen in the original scan cannot be synthesized. (b-c) Non-planar objects (e.g., some chairs) are not captured by our current primitive abstraction. (d) Small objects may be projected onto planar surfaces, as the depth camera resolution is low. (e-f) Texture inpainting can have difficulty synthesizing large missing regions.}
-	\label{fig:3dlite-limitation}
+    \label{fig:3dlite-limitation}
 \end{minipage}
 \end{figure}
 
@@ -542,7 +542,7 @@ Our new terms are able to bring the optimization to a precise alignment of color
 \end{figure}
 
 \emph{Color transfer correction.}
-We show the effect of the color transfer optimization in Fig.~\ref{fig:3dlite-eval-color-transfer}, significantly reducing not only visible artifacts from auto-exposure and auto-white balancing, but also various color inconsistencies which can occur even under fixed exposure and white balancing settings.
+We show the effect of the color transfer optimization in Fig.~\ref{fig:3dlite-eval-color-transfer}, significantly reducing not only visible artifacts from auto-exposure and auto-white balancing but also various color inconsistencies which can occur even under fixed exposure and white balancing settings.
 
 \emph{Texture sharpening.}
 In Fig.~\ref{fig:3dlite-eval-deblur}, we show the effectiveness of our texture sharpening approach.
@@ -570,7 +570,7 @@ Most notably, our current primitive abstraction is plane-based, so relatively no
     \centering
     \includegraphics[width=\linewidth]{texturegen/figures/pipeline.png}
     \caption{Texture Generation. 
-    From an input RGB-D scan, we optimize for both its texture image and a learned texture objective function characterized by  a discriminator network. 
+    From an input RGB-D scan, we optimize for both its texture image and a learned texture objective function characterized by a discriminator network. 
     The discriminator operates on reprojections of input color images in order to maintain robustness to various misalignments.
     We randomly pick a pair of input images, \emph{source} and \emph{auxiliary}, and synthesize the fake and real examples from the source view, conditioned on the re-projected source image. 
     The texture image and discriminator are trained in an alternating process.}
@@ -587,7 +587,7 @@ To optimize for a color texture, we must specify an objective function; in this 
 %
 To this end, we propose to learn the loss function in conjunction with the texture (see Figure~\ref{fig:toptim-pipeline}).
 %
-The function is modeled as an adversarial loss using a discriminator network identifying `real' and `fake' imagery, and is designed to provide a misalignment-tolerant metric for our texture optimization.
+The function is modeled as an adversarial loss using a discriminator network identifying `real' and `fake' imagery and is designed to provide a misalignment-tolerant metric for our texture optimization.
 %
 
 \subsection{Misalignment-Tolerant Metric}
@@ -598,7 +598,7 @@ The function is modeled as an adversarial loss using a discriminator network ide
 %
 Our key insight is to propose to learn a conditional discriminator as a misalignment-tolerant metric adaptive to the error distribution of the input data.
 %
-Figure~\ref{fig:toptim-misalign-example}(a) shows a 2D example where two observations (b) and (c) are misaligned by 2 units in the horizontal directions, and an L2 loss results in blurry appearance.
+Figure~\ref{fig:toptim-misalign-example}(a) shows a 2D example where two observations (b) and (c) are misaligned by 2 units in the horizontal directions and an L2 loss results in blurry appearance.
 %
 Ultimately, we aim to synthesize a texture that appears as realistic as either observation.
 %
@@ -618,11 +618,11 @@ Such re-projection can be achieved by projecting the color image onto the surfac
 %
 Unlike the simple 2D example, it is highly possible that there is no texture solution so that each local patch perfectly matches the one view from the input images, given camera and geometry error.
 %
-However, the proposed approach is expected to push those inconsistencies to the smooth textured regions to hide any artifacts that can be easily identified by the discriminator, and thereby producing locally consistent realistic texture solution.
+However, the proposed approach is expected to push those inconsistencies to the smooth textured regions to hide any artifacts that can be easily identified by the discriminator and thereby producing locally consistent realistic texture solution.
 %
 
 %
-For each optimization iteration, we randomly select two input images, $I_A$ (source image) and $I_B$ (auxiliary image) with corresponding camera poses $V_A$ and $V_B$.
+For each optimization iteration, we randomly select two input images, $I_A$ (source image) and $I_B$ (auxiliary image) with the corresponding camera poses $V_A$ and $V_B$.
 %
 The conditioning is $I_A$ from the viewpoint $V_A$, and the `real' image is $I_B$ projected to the scan geometry and rendered from $V_A$, while the `fake' image is the synthesized texture rendered from $V_A$.
 %
@@ -662,7 +662,7 @@ Finally, since we focus on evaluating foreground regions (pixels corresponding t
 
 %
 To retrieve a texture, we jointly optimize the texture and the misalignment-tolerant metric.
-%The texture and the misalignment-tolerant metric is learned jointly.
+%The texture and the misalignment-tolerant metric are learned jointly.
 %
 Inspired by the adversarial loss used in Pix2Pix~\cite{isola2017image}, we express our view-conditioned adversarial loss as:
 \begin{align}
@@ -697,7 +697,7 @@ Our objective texture solution is:
 %
 During training, we initialize all pixels in texture image to zero and $\lambda=10$.
 %
-The high $\lambda$ allows the L1 loss to provide an initial texture, and for every 1000 steps we exponentially decay the lambda by a factor of $0.8$.
+The high $\lambda$ allows the L1 loss to provide an initial texture, and for every 1000 steps, we exponentially decay the lambda by a factor of $0.8$.
 %
 We optimize in alternating fashion for each optimization step, using the Adam optimizer for both the texture and discriminator with learning rates $10^{-3}$ and $10^{-4}$ respectively.
 %
@@ -729,14 +729,14 @@ Note that standard image quality metrics such as the mean square error, PSNR~\ci
 We first verify the effectiveness of our method with a synthesized 2D example. 
 We aim to optimize for a 2D image, given input observations with 2D micro-translation errors.
 We use an image resolution of $512\times 512$ and translation error $\in[-16,16]^2$. 
-During texture optimization,  we  randomly select one observation as the source and another observation as the auxiliary, and optimize the target image to make it more realistic as evaluated by the current discriminator. 
+During texture optimization,  we randomly select one observation as the source and another observation as the auxiliary and optimize the target image to make it more realistic as evaluated by the current discriminator. 
 Figure~\ref{fig:3dlite-2d-example} shows the resulting image optimized with our approach in comparison to a naive L1 loss.
 \begin{figure}
     \centering
     \includegraphics[width=0.8\linewidth]{texturegen/figures/exp2d.pdf}
     \caption{Texture Generation on 2D. The texture provided by our approach is visually closer to the ground truth image while avoiding blurring artifacts such as those introduced by an L1 loss.
     An exact patch loss favors alignment over perceptual similarity, while the nearest patch loss is a more robust metric.
-    %Evaluated by exact patch loss, optimization based on L1 loss achieves 10.7 while ours is 11.3. Evaluated by nearest patch loss, L1 achieves 7.33 while ours is 1.53.
+    %Evaluated by exact patch loss, optimization based on L1 loss achieves 10.7 while ours is 11.3. Evaluated by the nearest patch loss, L1 achieves 7.33 while ours is 1.53.
     }
     \label{fig:3dlite-2d-example}
 \end{figure}
@@ -750,7 +750,7 @@ Optimization with the L1 loss achieves 10.7 exact patch loss while ours is 11.3.
 In order to quantitatively evaluate our 3D texture generation, we create a synthetic dataset of 16 models randomly selected from ShapeNet~\cite{chang2015shapenet} across different categories. 
 These shapes typically contain sharp edges and self-occlusion boundaries, complexities reflecting those of real-world objects.
 Since we aim to address arbitrary texturing, we enrich the appearance of these shapes by using 16 random color images from the internet as texture images. 
-To create  virtual scans of the objects, we uniformly sample $>900$ views on a unit hemisphere by subdividing an icosahedron, from which we render the textured geometry as observed color images. 
+To create virtual scans of the objects, we uniformly sample $>900$ views on a unit hemisphere by subdividing an icosahedron, from which we render the textured geometry as observed color images. 
 To simulate misalignment, we associate each rendered image with a slightly perturbed camera pose, and to simulate geometry errors, we apply random perturbations to the geometric model.
 We use a set of errors increasing from $n=1$ to $n=4.5$, and refer to the supplemental material for additional detail regarding generating camera and geometry perturbations.
 
@@ -820,17 +820,17 @@ To demonstrate the capability of our approach to optimize texture on a larger sc
 We evaluate our approach on scenes with ID $\leq 20$ ($\approx 2000-3000$ frames per scan) and compare it with the existing state of the arts. 
 Figure~\ref{fig:toptim-object-scan} (rows 5-9) and Table~\ref{tab:toptim-result} (middle column) show qualitative and quantitative comparisons. 
 Our method produces texturing most perceptually similar to the observed images; our misalignment-tolerant metrics aids in avoiding blur, increased sharpness, or excess noise produces by other methods due to camera and geometry errors in real-world scans.
-%We achieve better visual result compared to all other approaches with sharper or more consistent textures. Figure~\ref{fig:toptim-object-scan} (row 5-9) shows a visual comparison among different methods, where our result looks closest to the ground truth images.
+%We achieve better visual results compared to all other approaches with sharper or more consistent textures. Figure~\ref{fig:toptim-object-scan} (row 5-9) shows a visual comparison among different methods, where our result looks closest to the ground truth images.
 
 \paragraph*{Real to CAD Models}
 Since our method can better handle errors due to approximate surface geometry, it is possible to consider texturing CAD models using real-world images to attain realistic appearances.   While large datasets of 3D CAD models are now available~\cite{chang2015shapenet}, they are often untextured or textured simplistically, resulting in notably different appearance from real-world objects. 
 To test whether our method can be applied in this challenging scenario, 
-%We thus apply our approach to texturing CAD models using real-world imagery, to provide more realistic appearance despite both differing geometry of synthetic CAD models and real-world objects as well as camera errors in captured imagery. To this end, 
+%We thus apply our approach to texturing CAD models using real-world imagery, to provide a more realistic appearance despite both differing geometry of synthetic CAD models and real-world objects as well as camera errors in captured imagery. To this end, 
 we use our collected dataset of real object scans, retrieve similar CAD models from ShapeNet~\cite{chang2015shapenet}, and rigidly align them to the scanned objects.
 We then replace the scanned geometry with the CAD model geometry and then use the captured color images and estimated poses from the scan to optimize the CAD texture.
 Qualitative and quantitative evaluation of our approach in comparison to existing state-of-the-art methods are show in Figure~\ref{fig:toptim-object-scan} (rows 10-13) and Table~\ref{tab:toptim-result} (right column), respectively.
-Our approach is able to handle both camera poses errors as well as the synthetic-real geometry differences to produce texturing perceptually very similar to observed imagery, whereas other methods suffer strong blur, noise, and seam artifacts under these errors.
-%, it opens the potential for attaching real world appearance to the CAD models. We manually find the chairs as CAD models in ShapeNet which looks similar to the scanned model and apply a rigid 3D transformation to roughly align them. Then, we replace the scanned geometry with the CAD model and aim at mapping the color information from the scanning video to it. Figure~\ref{fig:toptim-object-scan} (row 10-13) shows the results from different approaches on painting CAD models. Our approach produces minimum artifacts and faithfully paint textures on top of the CAD models.
+Our approach is able to handle both cameras' poses errors as well as the synthetic-real geometry differences to produce texturing perceptually very similar to observed imagery, whereas other methods suffer strong blur, noise, and seam artifacts under these errors.
+%, it opens the potential for attaching real-world appearance to the CAD models. We manually find the chairs as CAD models in ShapeNet which looks similar to the scanned model, and we apply a rigid 3D transformation to roughly align them. Then, we replace the scanned geometry with the CAD model and aim at mapping the color information from the scanning video to it. Figure~\ref{fig:toptim-object-scan} (row 10-13) shows the results from different approaches on painting CAD models. Our approach produces minimum artifacts and faithfully paint textures on top of the CAD models.
 
 \paragraph*{Evaluation}
 \begin{figure}
@@ -864,12 +864,12 @@ Our approach is able to handle both camera poses errors as well as the synthetic
 \end{minipage}
 \end{figure}
 Although we lack ground truth texturing for the objects in the real environments, we can compare the perceptual loss~\cite{zhang2018unreasonable} with the rendering of textured geometry at the corresponding viewpoint. We select 10 views uniformly distributed from the scanning video, render the textured model to compute the mean of the perceptual loss.
-Table~\ref{tab:toptim-result} shows the performance of different methods on the object scans, scene scans and the CAD models, and our method achieves the best performance in these three scenarios.
+Table~\ref{tab:toptim-result} shows the performance of different methods on the object scans, scene scans, and the CAD models, and our method achieves the best performance in these three scenarios.
 
 Additionally, we perform a user study to evaluate the quality of the texture, shown in Figure~\ref{fig:user-study}.
 Our user study comprised $63$ participants who were asked to vote for the texture which produced a rendering closest to the input image. 
 For some views, it can sometimes be difficult for users to differentiate between different methods when regions are largely uniform in color. 
-Nevertheless, our method is  still notably preferred over other texturing approaches.
+Nevertheless, our method is still notably preferred over other texturing approaches.
 \begin{figure}
     \centering
     \includegraphics[width=\linewidth,height=1.15\linewidth]{texturegen/figures/result.pdf}

@@ -1,46 +1,50 @@
 \prefacesection{Abstract}
 Capturing and understanding the 3D environment is a fundamental step towards many applications including virtual reality, 3D vision, and robotics.
 %
-In computer graphics, the 3D environment is usually represented as the 3D geometry and the surface texture. Our work focus on surface texture processing -- reconstructing and understanding the surface texture.
+In the computer, the 3D environment is represented with the 3D geometry and the color, where the color information is usually stored as the surface texture. Our work focus on surface texture processing -- reconstructing and understanding the surface texture.
 %
 Specifically, our goal is to reconstruct the high-quality surface texture of the 3D surfaces in real environment captured by commodity 3D scanners, and provide effective solutions for learning geometric and semantic information from the surface texture.
 %
-For texture reconstruction, our main contribution focuses on tackling the inconsistent color mapping problem in the scanning data using explicit or implicit optimization methods.
+For texture reconstruction, we focus on tackling the main challenge as the color and geometry inconsistency in the scanning data using explicit or implicit optimization methods.
 %
-For understanding the surface texture, we propose a robust and efficient solution for parameterizing the 3D surface with a 2D space and design effective operators in the parameterization space for learning effective features from the surface texture.
+For understanding the surface texture, we identify the core problem is to define a canonical and regular parameterization space, construct this space with a robust and efficient solution, and design powerful feature extractors in this space for learning effective features from the surface texture.
 
 
-The main challenge of the high-quality texture reconstruction is to deal with the scanning errors of the geometry, the camera poses, and image artifacts including auto-exposure and motion blur.
+The main challenge of the high-quality texture reconstruction is to deal with inconsistencies caused by the scanning errors of the geometry, the camera poses, and image artifacts coming from auto-exposure and motion blur.
 %
-We propose to tackle this problem from two different perspectives.
+This thesis explores the opportunity to handle this problem from two different perspectives.
 %
-From the first perspective, we propose to compensate all these artifacts by explicitly warping and stitching image fragments from low-quality RGB input data to achieve high-resolution, sharp surface textures.
+From our first perspective, we propose to compensate all the artifacts with flexible explicit parametric models, for example, by explicitly warping the video frames and balancing the colors to achieve better consistency.
 %
-Observing that motion blur is a ubiquitous artifact in many video frames from the input, we advocate to select a single candidate frame for every local region of the 3D surface in order to balance the sharpness and boundary coherency.
+Observing that motion blur is a ubiquitous artifact in many video frames from the input, we advocate to replace the naive average fusion with the best-view selection based on pixel sharpness while enforcing boundary coherency by connecting regions from multiple frames. We show that explicit color consistency optimization and the novel fusion of the input images can produce high-quality and sharp surface textures.
 %
-Our first perspective shares the idea with most existing methods that enhance the texture quality by minimizing color inconsistency under the L2 metric to reduce the color inconsistency.
+However, an explicit parametric model is hard to fully cover different sources of errors in the real environment with inaccurate scanning geometry and complex lighting.
 %
-However, these different sources of errors in the real environment can hardly be fully-covered with explicit parametric models, especially with inaccurate scanning geometry.
-%
-From our second perspective, we propose to learn a deep metric that tolerates these errors instead of removing them, hoping the metric to enforce realistic texture generation without penalizing slight differences between the texture and the observations. We jointly optimize the metric with the texture so that the learned metric guides the direction of the realistic textures optimization.
+Therefore on our second perspective, we propose to learn a deep metric that tolerates these errors instead of removing them, and use the metric to guide the realistic texture generation without penalizing slight differences between the texture and the image observations. We model this deep metric as a patch-based discriminator using image convolutional neural network (CNN) and jointly optimize it with the texture to obtain realistic surface appearance.
 
 
-Our deep metric is implemented as a 2D convolutional neural network (CNN) in the image domain, which is a widely studied deep learning technique. Further, we believe that a CNN directly operated in the texture domain of the 3D surface can potentially be more straightforward and descriptive for the 3D tasks.
+While our deep metric can be implemented with an image CNN as a widely-studied deep learning technique, one followup in this thesis is to directly apply a CNN in the texture domain of the 3D surface.
 %
-However, there is no consensus on what is the best operator to cooperate with the surface texture signals in 3D.
+Although most works agree to apply axis-aligned convolution kernels in images, there is no consensus on what is the best operator to cooperate with the surface texture signals in 3D, mainly because of the ambiguity of surface parameterization.
 %
-We observe that the key challenge is to obtain a consistent and canonical surface parameterization that maps the 3D surface into a 2D space where 2D convolutions can apply.
+Therefore, this thesis firstly solves the key challenge to obtain a consistent and canonical surface parameterization that maps the 3D surface into a 2D space where 2D convolutions can apply.
 %
-We find that this challenge is related to the seamless surface parameterization problem in the computational geometry community, and we need to address this problem first. While this problem has been studied for more than a decade, the existing state-of-the-art method formulated as a mixed-integer programming problem (NP-hard), where an effective and robust solution is unavailable.
+We find that this challenge is related to the seamless surface parameterization problem in the computational geometry community. While this problem has been studied for more than a decade, the existing state-of-the-art method formulated as a mixed-integer programming problem (NP-hard), where an effective and robust solution is unavailable.
 %
-We reformulate the problem by approximating it with a minimum-cost flow graph which can be guaranteed to solve with a global minimum within polynomial time complexity. With our solution, we obtain a robust and efficient seamless parameterization for the geometry of a complex 3D environment.
+We reformulate the problem by approximating it with a minimum-cost flow graph where there is a guaranteed global optimal solution within polynomial time complexity. With such a formulation, we obtain a robust and efficient seamless parameterization for the geometry of a complex 3D environment.
 
 
-With the surface parameterization, we propose a surface convolution operator that extracts effective features in the parameterization space.
+With the canonical surface parameterization, we propose a surface convolution operator that extracts effective features for 3D learning tasks.
 %
-We define the geodesic neighborhood and determine the local coordinate system based on the parameterization.
-Based on it, we propose a novel four-way rotationally symmetric convolution operator that canonicalizes the feature extraction with the existence of orientation singularities in the parameterization.
+We show that such a surface CNN is powerful and descriptive for the 3D semantic segmentation with canonical feature extraction.
 %
-Our surface convolution can efficiently handle high-resolution texture signals, and thereby outperforming other less efficient dense 3D convolution operators.
+Specifically, We define the geodesic neighborhood and determine the local coordinate system based on the parameterization.
+Then, we propose a novel four-way rotationally symmetric convolution operator that canonicalizes the feature extraction with the existence of orientation singularities in the parameterization.
 %
-The surface parameterization serves as not only a basis for surface convolution operators to apply but also useful information that is highly-correlated and learnable from the color signals. With the existence of scanning data with aligned RGB images, we propose to render the pre-computed 3D canonical frames given the camera transformation to the input views and train a neural network to estimate them from the RGB images. With understanding the 3D canonical frames from RGB images, our network enables various applications including surface normal estimation, feature matching and augmented reality. 
+As a result, our surface convolution can efficiently handle high-resolution texture signals, and thereby outperforming other less efficient dense 3D convolution operators.
+%
+The canonical surface parameterization serves as not only a basis for surface convolution operators but also an important feature that is highly-correlated with the color signals.
+%
+Given the existing scanning data with aligned color images and the 3D geometry, we can create a dataset by pairing the RGB images with pre-computed 3D canonical frames given the camera transformation.
+%
+We train a neural network to estimate the canonical frames from the RGB images. With understanding the 3D canonical frames from RGB images, our network enables various applications including surface normal estimation, feature matching and augmented reality.
