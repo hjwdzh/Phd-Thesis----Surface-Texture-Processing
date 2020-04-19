@@ -1,7 +1,48 @@
 \section{FrameNet: Frame Estimation from RGB Images}
 \label{sec:framenet}
+\subsection{Introduction}
+we propose a novel image-to-3D task: dense 3D \cframe{} estimation from a single image. We have implemented an algorithm for this task in a supervised setting.   To acquire ``ground truth'' \cframe{}, we leverage data from RGB-D scanning datasets, like ScanNet~\cite{dai2017scannet}, which provide large sets of images posed within reconstructed 3D meshes.  
+We compute \cframe{} on the meshes and render them to the RGB images to produce training data.  There are multiple choices for how to define the frames.  A simple approach would be to use Manhattan frames; however, they
+reflect only the global scene orientation (figure~\ref{fig:vis-direction}(a)).   Instead, we compute locally consistent 4-RoSy \cframe{} that follow principal curvatures using the Quadriflow algorithm~\cite{huang2018quadriflow} (figure~\ref{fig:vis-direction}(b)).  We find that the surface tangent directions computed this way are consistent with image features and can be learned by a network from 2D data.
+
+The \cframes{} are fundamental 3D properties of a scene, as they imply the canonical transformation that maps the 3D surface to the image plane.  They provide not only the surface normal but also canonical tangent directions and their projections onto the image plane.  We show that predicting all these directions jointly can improve surface normal estimation, local patch description using SIFT features~\cite{lowe2004distinctive}, and allow the insertion of novel objects with correct orientation in augmented reality applications.
+
+Overall, the core contributions of the paper are:
+     \vspace{-0.05in}
+\begin{itemize}
+     \item Identifying an important new 3D vision problem: local canonical frame estimation from RGB images.
+    \vspace{-0.1in}
+    \item Using projected tangent principal directions to improve \cframe{} estimation, outperforming existing works on surface normal estimation.
+    \vspace{-0.1in}
+    \item Exploiting tangent projected principal directions to compute perspective invariant feature descriptors.
+    \vspace{-0.1in}
+    \item Inserting new elements in the scene in a manner aware of perspective distortions, for augmented reality.
+\end{itemize}
+\begin{figure}
+    \centering
+    \includegraphics[width=\linewidth]{FrameNet/graph/illus.pdf}
+    \vspace{-0.3in}
+    \caption{We visualize the directions by picking random seed points and tracing along projected directions in the image. \cam{(a) and (b) show the Manhattan and projected principal directions in the same scene, respectively. (c) shows that projected principal directions usually follow the texture directions or object boundaries.}}
+    \label{fig:vis-direction}
+    \vspace{-0.1in}
+\end{figure}
+
+\subsection{Related Work}
+\label{related:framenet}
+\paragraph*{3D from Single Image.}
+Estimating 2.5D geometry properties from a single image has become popular in recent years. Traditional methods aim at understanding low-level image information and geometry constraints. For example, Torralba \textit{et al.}~\cite{torralba2002depth} exploits the scene structure to estimate the absolute depth values. Saxena \textit{et al.}~\cite{saxena2006learning} uses hand-crafted features to predict the depth based on Markov random fields. Hoiem \textit{et al.}~\cite{hoiem2007recovering} recovers scene layout guided by the vanishing points and lines. Shi \textit{et al.}~\cite{shi2015break} estimates the defocus blur and uses it to assist depth estimation.
+
+With the availability of large-scale datasets and the success of deep learning, many methods have been proposed for depth or/and normal estimation. For depth estimation, Eigen \textit{et al.}~\cite{eigen2014depth} uses CNN to predict indoor depth maps on the NYUv2 dataset. With the powerful backbone network like VGG~\cite{simonyan2014very} or ResNet~\cite{he2016deep}, depth estimation can be further improved~\cite{garg2016unsupervised,xie2016deep3d}. DORN~\cite{fu2018deep} proposes a novel ordinary loss and achieves the state-of-the-art in KITTI~\cite{geiger2013vision}. For surface normal estimation, Wang \textit{et al.}~\cite{wang2015designing} incorporate vanishing point and layout information in the network architecture. Eigen and Fergus~\cite{eigen2015predicting} trained a coarse-to-fine CNN to refine the details of the normals. The skip-connected architecture~\cite{bansal2016marr} is proposed to fuse hidden layers for normal estimation.
+
+Since surface normal and depth are related to each other, another set of methods aimed at jointly predicting both to improve the performance. Wang \textit{et al.}~\cite{wang2016surge} exploits the consistency between normal and depth in planar regions. GeoNet~\cite{qi2018geonet} proposes a refinement network to enhance the depth and normal estimation from each other. Zhang \textit{et al.}~\cite{zhang2018deep} predict the normal and solve a global optimization problem to complete the depth.  We take a further step by jointly estimating all axes of a 3D canonical frame at each pixel, which helps both regularize the prediction through constraints and is useful in applications.
+
+\paragraph*{Local Canonical Frames}
+\jw{Computing local \cframe{} on surfaces is a fundamental step for many problems.} 3DLite~\cite{huang20173dlite} builds \cframe{} in fitted 3D planes for color optimizations. GCNN~\cite{masci2015geodesic} defines local frames with spherical coordinates and applies discrete patch operators on tangent planes. ACNN~\cite{boscaini2016learning} introduces the anisotropic heat kernels derived from principal curvatures \jw{so that it can apply convolutions in canonical frames defined by principal axes. Such canonical frame} is also used in Xu \textit{et al.}~\cite{xu2017directionally} for nonrigid segmentation, by Tatarchenko \textit{et al.}~\cite{tatarchenko2018tangent,huang2018texturenet} for semantic segmentation of the 3D scenes. \jw{We aim at recognizing such frames from 2D images, and compute them from 3D surfaces to supervise the learning.}
+
+TextureNet~\cite{huang2018texturenet} highlights the challenges of computing robust local \cframe{} at planar surface regions, where the principal curvatures are undetermined or highly influenced by noise or uneven sampling. Therefore, it proposes to compute a 4-RoSy orientation field to represent the principal directions. The 4-RoSy orientation field is an important concept in the geometry processing community~\cite{ray2008n,lai2010metric}. The target directions are aligned with the principal curvatures~\cite{cohen2003restricted,cazals2005estimating}, but regularized by additional energy to vary smoothly. This can be achieved by optimizing a nonlinear energy by periodic functions~\cite{hertzmann2000illustrating,ray2009geometry} or a mixed-integer representation~\cite{ray2008n,bommes2009mixed}. In our work, we use QuadriFlow~\cite{huang2018quadriflow} to optimize the 4-RoSy field so that it aligns with the principal curvatures at the curved surface and ensures smoothness in flat regions (where principal directions are ill-defined), as well as robustness to noise.
+
 \subsection{Approach}
-In this section, we develop our approach for learning local \cframe{} from RGB images. First, we discuss the ground truth labeling of \cframe{} from 2D images in section~\ref{sec:framenet-prepare-data}. Then, we discuss the concept of projected tangent principal directions in section~\ref{sec:framenet-project}. Finally in section~\ref{sec:framenet-network}, we propose several energy terms that encourage the neural network to predict consistent local \cframe{} assisted by the projected tangent principal directions. Since we focus on the behavior of the local \cframe{} rather than the neural network architecture, we can adopt any neural network that predicts per-pixel features (see experiments in Sec. \ref{sec:framenet-evaluation} and \ref{sec:framenet-applications}).
+In this section, we develop our approach for learning local \cframe{} from RGB images. First, we discuss the ground truth labeling of \cframe{} from 2D images in Section~\ref{sec:framenet-prepare-data}. Then, we discuss the concept of projected tangent principal directions in Section~\ref{sec:framenet-project}. Finally in Section~\ref{sec:framenet-network}, we propose several energy terms that encourage the neural network to predict consistent local \cframe{} assisted by the projected tangent principal directions. Since we focus on the behavior of the local \cframe{} rather than the neural network architecture, we can adopt any neural network that predicts per-pixel features (see experiments in Sec. \ref{sec:framenet-evaluation} and \ref{sec:framenet-applications}).
 
 \subsubsection{Local \ccff{} Generation}
 \label{sec:framenet-prepare-data}
@@ -16,7 +57,7 @@ To label the \cframe, we need a dataset with 3D meshes aligned with RGB images t
 \vspace{-0.1in}
 \end{figure}
 
-We compute \cframe{} as surface normals and tangent principal directions with the scene geometry. It is straightforward to compute surface normals, but tangent principal directions at flat regions are hard to compute especially in the presence of noise. As visualized in figure~\ref{fig:framenet-vis-geometry}(a,c), the tangent principal directions can be pretty noisy. To solve this problem, we adopt the 4-RoSy field using QuadriFlow~\cite{huang2018quadriflow} as proposed by TextureNet~\cite{huang2018texturenet}, as shown in figure~\ref{fig:framenet-vis-geometry}(b,d): This field generates consistent directions which vary smoothly at flatter regions and are aligned with the principal curvatures at curved surfaces. The cross-field is 4-RoSy since there are four valid choices for the tangent principal directions at each vertex. Considering this, we pick any pair of orthogonal tangent vectors in the cross-field to represent the principal directions, but we also view the other three alternatives as valid ground truth.
+We compute \cframe{} as surface normals and tangent principal directions with the scene geometry. It is straightforward to compute surface normals, but tangent principal directions at flat regions are hard to compute especially in the presence of noise. As visualized in Figure~\ref{fig:framenet-vis-geometry}(a,c), the tangent principal directions can be pretty noisy. To solve this problem, we adopt the 4-RoSy field using QuadriFlow~\cite{huang2018quadriflow} as proposed by TextureNet~\cite{huang2018texturenet}, as shown in Figure~\ref{fig:framenet-vis-geometry}(b,d): This field generates consistent directions which vary smoothly at flatter regions and are aligned with the principal curvatures at curved surfaces. The cross-field is 4-RoSy since there are four valid choices for the tangent principal directions at each vertex. Considering this, we pick any pair of orthogonal tangent vectors in the cross-field to represent the principal directions, but we also view the other three alternatives as valid ground truth.
 
 \begin{figure}
     \centering
@@ -70,13 +111,13 @@ We compute \cframe{} as surface normals and tangent principal directions with th
 \vspace{-0.1in}
 \end{figure}
 
-We store the computed local \cframe{} on top of mesh vertices and render them to images after transforming them into the camera space. For each triangle to be rendered, we enumerate the $90^{\circ}N (N\in \mathbb{Z})$ degree rotations to the tangent principal directions of the last two vertices, so as to align them with the first vertex before the standard rasterization stage. This is to deal with the 4-way rotational ambiguities in the cross-field. For each RGB image, we render and save the tangent principal directions as two images, as shown in figure~\ref{fig:framenet-dataset} as X and Y. The ground truth normal can be directly computed as the cross product of them.
+We store the computed local \cframe{} on top of mesh vertices and render them to images after transforming them into the camera space. For each triangle to be rendered, we enumerate the $90^{\circ}N (N\in \mathbb{Z})$ degree rotations to the tangent principal directions of the last two vertices, so as to align them with the first vertex before the standard rasterization stage. This is to deal with the 4-way rotational ambiguities in the cross-field. For each RGB image, we render and save the tangent principal directions as two images, as shown in Figure~\ref{fig:framenet-dataset} as X and Y. The ground truth normal can be directly computed as the cross product of them.
 
 \subsubsection{Projected Principal Directions}
 \label{sec:framenet-project}
 Since we aim to predict 3D principal tangent directions from their appearances into RGB images, we first derive the projective geometry that relates them.
 
-%We observe that the projected tangent principal directions are mostly consistent with the object boundaries or image gradients as shown in figure~\ref{fig:framenet-vis-geometry}(d). Therefore, we want to study the relationship between the tangent principal directions and their projections in the image.
+%We observe that the projected tangent principal directions are mostly consistent with the object boundaries or image gradients as shown in Figure~\ref{fig:framenet-vis-geometry}(d). Therefore, we want to study the relationship between the tangent principal directions and their projections in the image.
 
  For a pixel $\mb{p}=(p_x,p_y)$ in the canonical camera coordinate system, its 3D position of the pixel can be represented as $\mb{P}=(p_xd, p_yd, d)$ where $d$ is the depth value. Suppose the pixel has two tangent principal directions $\mb{i}$ and $\mb{j}$, and we want to analyze their projections. For $\mb{i}=(i_x,i_y,i_z)$, we can project a line segment $l(\mb{P},\delta,\mb{i})$ that connects endpoints $\mb{P}$ and $\mb{P}+\delta \cdot \mb{i}$ into the image as $l_p(\textbf{P},\delta,\mb{i})$, which is the offset from $\mb{p}$ to the projection of $\mb{P}+\delta \mb{i}$:
 \begin{equation}
@@ -93,7 +134,7 @@ This simple definition, however, requires a complex mathematical form including 
     l^u_p(\textbf{P},\textbf{i}) := \frac{l_p(\textbf{P},\delta,\mb{i})}{||l_p(\textbf{P},\delta,\mb{i})||_2} = \frac{(i_x - p_x i_z, i_y - p_y i_z)}{||(i_x - p_x i_z, i_y - p_y i_z)||_2}.
     \label{eq:framenet-def2}
 \end{equation}
-This representation removes the influence of depth as the challenging hidden property. Since the projection usually aligns with the image gradients, it can be as easy as the task of predicting the normalized gradient for the neural network. However, though this is an easy task, the unit projected direction cannot determine the original 3D direction. As shown in figure~\ref{fig:framenet-dir-constraint}(a), a 2D direction in an image is corresponding to a plane in the 3D world, in which any 3D direction could be a valid solution. Fortunately, we can simplify the definition as
+This representation removes the influence of depth as the challenging hidden property. Since the projection usually aligns with the image gradients, it can be as easy as the task of predicting the normalized gradient for the neural network. However, though this is an easy task, the unit projected direction cannot determine the original 3D direction. As shown in Figure~\ref{fig:framenet-dir-constraint}(a), a 2D direction in an image is corresponding to a plane in the 3D world, in which any 3D direction could be a valid solution. Fortunately, we can simplify the definition as
 \begin{equation}
     l_p^*(\textbf{P},\textbf{i}) := (i_x - p_xi_z, i_y-p_yi_z).
     \label{eq:framenet-def3}
@@ -125,7 +166,7 @@ We could train a network to estimate the projected principal directions $\mb{i}_
     \caption{To estimate the local \cframe{}, we feed the RGB image and the canonical pixel coordinate map to the network. The output is a 13-dimensional vector for each pixel including two projected tangent principal directions, two 3D tangent principal directions, and one normal vector. We propose a new loss that utilizes the projected directions to improve the estimation of the \cframe{}.}
     \label{fig:framenet-architecture}
 \end{figure}
-Our proposed solution is illustrated in figure~\ref{fig:framenet-architecture}. The neural network can be viewed as a black box function that predicts per-pixel features for the RGB image. Since the projected tangent principal directions relate to the pixel coordinate in the canonical camera, we feed the canonical pixel coordinate together with its RGB values into the network as the input. The network outputs a 13-dimensional vector includes two tangent principal directions $\mb{i}$ and $\mb{j}$, their 2D projections $\mb{i}_p$ and $\mb{j}_p$, and the surface normal $\mb{n}$.
+Our proposed solution is illustrated in Figure~\ref{fig:framenet-architecture}. The neural network can be viewed as a black box function that predicts per-pixel features for the RGB image. Since the projected tangent principal directions relate to the pixel coordinate in the canonical camera, we feed the canonical pixel coordinate together with its RGB values into the network as the input. The network outputs a 13-dimensional vector includes two tangent principal directions $\mb{i}$ and $\mb{j}$, their 2D projections $\mb{i}_p$ and $\mb{j}_p$, and the surface normal $\mb{n}$.
 
 We propose a set of energies so that projected tangent principal directions can assist the local principal axes estimation. The loss energy $E$ is a linear combination of five energy terms as shown in equation~\ref{eq:framenet-loss},
 \begin{align}
@@ -155,7 +196,7 @@ The main conclusion of these tests is that jointly predicting the projected tang
 %Our experiments show that the proposed formulations in equation~\ref{eq:framenet-def2} and \ref{eq:framenet-def3} achieve similar errors and significantly outperform equation~\ref{eq:framenet-def1}. We also find that projected tangent directions and the consistency loss are major contributors to the success of local principal axes estimation.
 
 \vspace{-0.1in}
-\paragraph{How well can canonical frames be estimated from RGB?}  Our first experiment simply investigates how well our algorithm can predict the \cframe{}.   Since this is a new task, there is no suitable comparison to prior work.   However, we can still gain insight into the problem by comparing errors in predicted normals, principal tangent principal directions, and projected tangent principal directions.   The results in table~\ref{tab:framenet-3dframe} show that prediction of projected tangent principal directions has the least error, surface normals have the most error, and tangent principal directions are in the middle.   This suggests that predicting tangent directions is less error-prone than normals, which should be expected since they largely align with textures and gradients in the input image (figure~\ref{fig:framenet-project}). 
+\paragraph{How well can canonical frames be estimated from RGB?}  Our first experiment simply investigates how well our algorithm can predict the \cframe{}.   Since this is a new task, there is no suitable comparison to prior work.   However, we can still gain insight into the problem by comparing errors in predicted normals, principal tangent principal directions, and projected tangent principal directions.   The results in Table~\ref{tab:framenet-3dframe} show that prediction of projected tangent principal directions has the least error, surface normals have the most error, and tangent principal directions are in the middle.   This suggests that predicting tangent directions is less error-prone than normals, which should be expected since they largely align with textures and gradients in the input image (Figure~\ref{fig:framenet-project}). 
 
 \begin{table}[t]
     \centering
@@ -216,7 +257,7 @@ The main conclusion of these tests is that jointly predicting the projected tang
 \label{sec:framenet-ablate}
 
 %\vspace{-0.1in}
-\paragraph{Which frame directions are easiest to predict?}  To further investigate the relative challenge of predicting different components of the local \cframe{}, we perform experiments in which we separately train normals and tangent principal directions in 3D space with L2 losses and evaluate them with mean angle errors of their projections to three planes in camera space, as illustrated in figure~\ref{fig:framenet-err-proj}.  The prediction errors and their projected components, listed in table~\ref{tab:framenet-error}, suggest
+\paragraph{Which frame directions are easiest to predict?}  To further investigate the relative challenge of predicting different components of the local \cframe{}, we perform experiments in which we separately train normals and tangent principal directions in 3D space with L2 losses and evaluate them with mean angle errors of their projections to three planes in camera space, as illustrated in Figure~\ref{fig:framenet-err-proj}.  The prediction errors and their projected components, listed in Table~\ref{tab:framenet-error}, suggest
 that the errors of the tangent principal directions are less than those of normals, and the projected errors on the image plane are smaller than those on the other two planes for tangent principal directions.  This again suggests that the network can predict tangent principal directions better than surface normals, especially for the components projected into the image plane.  Interestingly, the projected errors for the normal in the image plane is the largest, which might be because the network learns tangent principal directions in the latent space and propagates the errors from XZ and YZ planes to the image plane by the cross product.
 \begin{figure}
     \centering
@@ -229,7 +270,7 @@ that the errors of the tangent principal directions are less than those of norma
 
 %\vspace{-0.1in}
 \paragraph{How does each loss contribute to the estimation?}
-We next study how our proposed consistency losses influence the learning process. In table~\ref{tab:framenet-consistency}, we present the testing mean average angle for surface normals w/o. certain parts of losses during training on ScanNet. We note that by directly predicting all $E_N$ and $E_P$ together, there is already an improvement. The reason could be that the correlation between predicted principal directions and the 3D frames are automatically learned from the data distribution. However, the improvement is minor without predicting the projected principal directions with $E_L$. With orthogonal or consistency constraints, the performance can be further improved and achieve the maximum with both.
+We next study how our proposed consistency losses influence the learning process. In Table~\ref{tab:framenet-consistency}, we present the testing mean average angle for surface normals w/o. certain parts of losses during training on ScanNet. We note that by directly predicting all $E_N$ and $E_P$ together, there is already an improvement. The reason could be that the correlation between predicted principal directions and the 3D frames are automatically learned from the data distribution. However, the improvement is minor without predicting the projected principal directions with $E_L$. With orthogonal or consistency constraints, the performance can be further improved and achieve the maximum with both.
 \begin{table}
     \centering
     \tabcolsep=0.20cm
@@ -261,7 +302,7 @@ We next study how our proposed consistency losses influence the learning process
 
 \vspace{-0.1in}
 \paragraph{Which definition of projected directions is best?}
-In equation~\ref{eq:framenet-def1}~\ref{eq:framenet-def2}~\ref{eq:framenet-def3}, we propose three choices for projected tangent principal directions. We use UNet~\cite{ronneberger2015u} to separately train and test them on ScanNet~\cite{dai2017scannet} as shown in table~\ref{tab:framenet-def}. The mean angle error for equation~\ref{eq:framenet-def1} is the highest as a complex function related to the depth. The error for equation~\ref{eq:framenet-def3} is only slightly higher than that in equation~\ref{eq:framenet-def2}, but equation~\ref{eq:framenet-def3} can explicitly guide the 3D directions with the consistency loss $E_C$. Therefore, we select equation~\ref{eq:framenet-def3} together with the canonical frames for joint estimation.
+In equation~\ref{eq:framenet-def1}~\ref{eq:framenet-def2}~\ref{eq:framenet-def3}, we propose three choices for projected tangent principal directions. We use UNet~\cite{ronneberger2015u} to separately train and test them on ScanNet~\cite{dai2017scannet} as shown in Table~\ref{tab:framenet-def}. The mean angle error for equation~\ref{eq:framenet-def1} is the highest as a complex function related to the depth. The error for equation~\ref{eq:framenet-def3} is only slightly higher than that in equation~\ref{eq:framenet-def2}, but equation~\ref{eq:framenet-def3} can explicitly guide the 3D directions with the consistency loss $E_C$. Therefore, we select equation~\ref{eq:framenet-def3} together with the canonical frames for joint estimation.
 
 \begin{table}[t]
     \centering
@@ -422,7 +463,7 @@ keypoint feature matching~\cite{lowe2004distinctive,bay2006surf,tola2010daisy,ha
 %Recently, deep learning-based methods have been proposed~\cite{}. Among them, LIFT~\cite{yi2016lift} is currently the state-of-the-art method which offers robust feature matching.  
 For example, SIFT~\cite{lowe2004distinctive} estimates scale and camera-plane rotations to provide invariance to those transformations.  Since
 our network estimates a full local 3D \cframe{}, we can additionally estimate a projective warp.  
-%We estimate the canonical tangent plane of the surface at each pixel and use it to warp its neighborhood before computing its descriptor, as illustrated in figure~\ref{fig:framenet-warp}.
+%We estimate the canonical tangent plane of the surface at each pixel and use it to warp its neighborhood before computing its descriptor, as illustrated in Figure~\ref{fig:framenet-warp}.
 Specifically, predicting the pairs of projected tangent principal directions (in equation~\ref{eq:framenet-def3}) for pixel $\mb{p}$ as $\mb{i}_p$ and $\mb{j}_p$ the local patch $\mathbb{P}$ is warped to $\mathbb{P}^*$ as shown in equation~\ref{eq:framenet-warp}:
 \begin{equation}
     \mathbb{P}^*(\textbf{x}) = \mathbb{P}([\textbf{i}_p, \textbf{j}_p]\textbf{x})\,.
@@ -438,7 +479,7 @@ Specifically, predicting the pairs of projected tangent principal directions (in
 
 To investigate this feature, we performed a simple experiment with SIFT~\cite{lowe2004distinctive}.  We augmented the standard SIFT descriptor computation to account for perspective warps implied by our predicted \cframes. Specifically, we detect keypoints using SIFT~\cite{lowe2004distinctive} and extract the SIFT descriptors on the warped patch using our estimated local projected tangent principal directions.
 
-To evaluate our modified descriptor, we compare it with other methods on the DTU dataset~\cite{aanaes2012interesting}, where scenes are captured with different lighting and viewpoints. We visualize the correct matching produced by SIFT with and without our local image warping in figure~\ref{fig:framenet-dtu-vis}. As a result, the local image warping reduces the perspective distortions and produce more correct matches.
+To evaluate our modified descriptor, we compare it with other methods on the DTU dataset~\cite{aanaes2012interesting}, where scenes are captured with different lighting and viewpoints. We visualize the correct matching produced by SIFT with and without our local image warping in Figure~\ref{fig:framenet-dtu-vis}. As a result, the local image warping reduces the perspective distortions and produce more correct matches.
 \begin{figure}
     \centering
     \includegraphics[width=0.8\linewidth]{FrameNet/graph/vis-sift.pdf}
@@ -447,7 +488,7 @@ To evaluate our modified descriptor, we compare it with other methods on the DTU
 \end{figure}
 We also test the matching score as ``the ratio of ground truth correspondences that can be recovered by the whole pipeline over the number of features proposed by the pipeline in the shared viewpoint region''~\cite{yi2016lift}.
 
-As shown in table~\ref{tab:framenet-matching}, SIFT~\cite{lowe2004distinctive} outperforms most methods. Since our method additionally reduces the perspective effects using the projected tangent principal directions, we can further improve the SIFT performance. Note that ASIFT~\cite{yu2011asift} also shares the limitation of SIFT~\cite{lowe2004distinctive} to different viewpoints, and extracts keypoints from the image with various affine transforms. Therefore, they usually provide much more correct matching but also more outliers. That is why the matching score produced by ASIFT~\cite{yu2011asift} is slightly lower than SIFT~\cite{lowe2004distinctive}. However, it sometimes shows better robustness assisted by geometric filters in certain applications.
+As shown in Table~\ref{tab:framenet-matching}, SIFT~\cite{lowe2004distinctive} outperforms most methods. Since our method additionally reduces the perspective effects using the projected tangent principal directions, we can further improve the SIFT performance. Note that ASIFT~\cite{yu2011asift} also shares the limitation of SIFT~\cite{lowe2004distinctive} to different viewpoints, and extracts keypoints from the image with various affine transforms. Therefore, they usually provide much more correct matching but also more outliers. That is why the matching score produced by ASIFT~\cite{yu2011asift} is slightly lower than SIFT~\cite{lowe2004distinctive}. However, it sometimes shows better robustness assisted by geometric filters in certain applications.
 
 \begin{table}
     \centering
@@ -475,7 +516,7 @@ As shown in table~\ref{tab:framenet-matching}, SIFT~\cite{lowe2004distinctive} o
 A particularly compelling application of predicting 3D surface frames is augmented reality -- i.e., it enables adding new elements to a scene with appropriate 3D orientations.
 
 \vspace{-0.1in}
-\paragraph{Decal Attachment}  As a simple example, we investigate warping virtual decals added to RGB images based on the estimated 3D frame (first two rows of figure~\ref{fig:framenet-attach}). In our experiment, we ask the user to select one pixel in an RGB image to indicate the center point for the decal on a surface.  If we assume the surface is planar, we can compute the homography transformation required to align the decal with the scene geometry. Suppose the selected pixel is $\mb{p}$ with two estimated principal directions $\mb{i}$ and $\mb{j}$ and depth $d$. Then, the center of the pattern $(x_c,y_c)$ is located at $K^{-1}\mb{p}\cdot d$ where $K$ is the camera intrinsics. We additionally suppose that the target distance of neighboring pixels of the pattern attached to the scene is $\delta\cdot d$. Then, for pixel $(x,y)$ in the pattern, the homogeneous coordinate in the scene is
+\paragraph{Decal Attachment}  As a simple example, we investigate warping virtual decals added to RGB images based on the estimated 3D frame (first two rows of Figure~\ref{fig:framenet-attach}). In our experiment, we ask the user to select one pixel in an RGB image to indicate the center point for the decal on a surface.  If we assume the surface is planar, we can compute the homography transformation required to align the decal with the scene geometry. Suppose the selected pixel is $\mb{p}$ with two estimated principal directions $\mb{i}$ and $\mb{j}$ and depth $d$. Then, the center of the pattern $(x_c,y_c)$ is located at $K^{-1}\mb{p}\cdot d$ where $K$ is the camera intrinsics. We additionally suppose that the target distance of neighboring pixels of the pattern attached to the scene is $\delta\cdot d$. Then, for pixel $(x,y)$ in the pattern, the homogeneous coordinate in the scene is
 \begin{equation}
 \textbf{P}(x,y) = K\cdot(K^{-1}\mb{p}\cdot d + \textbf{i}\cdot (x-x_c)\delta d + \textbf{j}\cdot (y-y_c)\delta d)\,.
 \end{equation}
@@ -495,8 +536,8 @@ Beyond this point, our local frame even enables deformable pattern attachment on
 \begin{equation}
     \mb{P}(\mb{x}_t)=\mb{p} + \delta K \cdot\int_{\mb{x}_c}^{\mb{x}_t} [\textbf{i}(\mb{P}(\mb{x})),\textbf{j}(\mb{P}(\mb{x}))] d\mb{x}\,.
 \end{equation}
-We use the simple explicit Euler method to evolve $\mb{P}(\mb{x})$, where the path of the integration starts from the center, and follows the order guided by the breadth first search, where the expansion is from one pixel to those among its four neighbors which are not yet visited. Several examples of deformable attachment is shown in figure~\ref{fig:framenet-attach}. The user can control $\delta$ to specify the size of the attached patterns.
+We use the simple explicit Euler method to evolve $\mb{P}(\mb{x})$, where the path of the integration starts from the center, and follows the order guided by the breadth first search, where the expansion is from one pixel to those among its four neighbors which are not yet visited. Several examples of deformable attachment is shown in Figure~\ref{fig:framenet-attach}. The user can control $\delta$ to specify the size of the attached patterns.
 
 \vspace{-0.1in}
-\paragraph{Object Placement} We can also use the local 3D frame defined by predicted principal axes to render 3D objects into RGB images, as shown in the last two rows of figure~\ref{fig:framenet-attach}.  For this application, predicting the full 3D orientation of the scene geometry is critical, so that objects can be planes not only in accordance with the surface normal but also in the appropriate rotation around the normal (e.g., so that the front is facing the right way).   For example, the stuffed animals in the bottom left of figure~\ref{fig:framenet-attach} would appear unnatural if they were facing the wall. This could also ease mixed reality data augmentation for vision tasks, where existing methods require the depth image for plane detection~\cite{wang2019normalized}.
+\paragraph{Object Placement} We can also use the local 3D frame defined by predicted principal axes to render 3D objects into RGB images, as shown in the last two rows of Figure~\ref{fig:framenet-attach}.  For this application, predicting the full 3D orientation of the scene geometry is critical, so that objects can be planes not only in accordance with the surface normal but also in the appropriate rotation around the normal (e.g., so that the front is facing the right way).   For example, the stuffed animals in the bottom left of Figure~\ref{fig:framenet-attach} would appear unnatural if they were facing the wall. This could also ease mixed reality data augmentation for vision tasks, where existing methods require the depth image for plane detection~\cite{wang2019normalized}.
 

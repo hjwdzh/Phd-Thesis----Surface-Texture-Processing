@@ -1,6 +1,89 @@
 \chapter{Texture Reconstruction}
 \label{chapter:texture-recon}
-In this chapter, we mainly study the texture reconstruction problem in two different ways. Section~\ref{sec:toptim} presents \emph{3DLite} that produces abstracted scene with completed planar geometry with high-quality texture. Section~\ref{sec:tadv} discusses a novel method that jointly optimizes the texture with an adversarial learned metric that tolerates scanning errors.
+In this chapter, we study the texture reconstruction problem from two different viewpoints. We briefly introduce the technical contributions in Section~\ref{sec:texturerecon-intro} and related work in Section~\ref{related:texture-recon}. Section~\ref{sec:toptim} presents \emph{3DLite} that produces an abstracted scene with geometry priors (Section~\ref{sec:3dlite-plane-abstraction}) and applies explicit parametric texture optimization~\ref{sec:approach-texture}. Section~\ref{sec:tadv} discusses a novel method that jointly optimizes the texture with an learned adversarial metric that tolerates scanning errors.
+
+\section{Introduction}
+\label{sec:texturerecon-intro}
+We focus on high-quality texture reconstruction given inaccurate or abstracted geometry. We briefly introduce the technical contributions in this section, including building geometry priors from the scans and using an explicit parametric model or learned metric for texture optimization.
+
+\paragraph*{Geometry Priors}
+Our first approach, \emph{3DLite}~\cite{huang20173dlite}, generates lightweight, complete, CAD-like models of large-scale indoor scenes before we reconstruct high-quality textures.
+%
+We take as input an RGB-D video sequence from a handheld commodity sensor and first reconstruct the scene with existing 3D reconstruction methods.
+Since we aim to generate complete scenes and sharp, clean textures, we employ a primitive-based abstraction to represent the scanned environments.
+In particular, we use plane primitives, as planes facilitate texture mapping as well as scene completion through extrapolation, thus generating a denoised geometric representation of the scene.
+%
+We first optimize for these primitives under a Manhattan assumption, since man-made environments are often designed in such highly structured fashion.
+To complete the scene geometry in occluded regions, we formulate a new hole-filling approach by extrapolating the planar primitives according to unknown space as seen by the camera trajectory.
+That is, we respect the known empty space in the scene and only fill holes in regions unseen by the camera.
+This generates a complete geometric representation of the scene.
+%
+Our second approach, \emph{Adversarial Texture Optimization}~\cite{huang2020adversarial}, learns a deep-metric that tolerates complex misalignment between image observations and the target geometry. Therefore, we can replace the scanning geometry with clean human-created CAD models with geometry misalignments but still perform decent texture optimization.
+
+\paragraph*{Parametric Texture Optimization}
+Our first approach~\cite{huang20173dlite} performs a novel texture optimization to map the scene geometry with sharp colors from the input RGB data.
+Since camera poses estimated from noisy RGB-D data are prone to micro-drift, our texture optimization step solves for refined rigid and non-rigid image alignments, optimizing for photo-consistency using both sparse color and dense geometric information.
+%
+Zhou \textit{et al.}~\cite{zhou2014color} optimize purely for a dense energy term remains sensitive to initial poses and easy to end up in local minima. Therefore, we build upon them and employ a sparse-to-dense optimization, using sparse color features and geometric primitive constraints to help reach the basin of convergence of the dense photo-consistency energy.
+%
+To mitigate the effects of motion blur and auto-exposure, we perform an exposure correction and select and stitch together only the sharpest regions of the input RGB images, obtaining globally consistent, sharp colors. While existing methods reduce blurriness artifacts caused by average aggregation with single view selection~\cite{dessein2014seamless}, we further take pixel sharpness into consideration in the existence of motion blur. We select the best view for each region to balance the visual sharpness and color consistency of boundaries between neighboring regions with different views selected, which is modeled as a multi-label graph-cut problem~\cite{boykov2001fast}.
+
+\paragraph*{Adversarial Metric for Texture Optimization}
+Prior approaches depend on explicit models and color consistency optimization, and are not expressive enough and/or their optimization algorithms are not robust enough to handle the complex distortions and misalignments commonly found in scans with commodity cameras.
+
+To address these issues, our second approach~\cite{huang2020adversarial} proposes a flexible texture optimization framework based on a learned metric that is robust to common scanning errors.
+% the scanning errors tuned separately for each individual scan. 
+ The key idea behind our approach is to account for misalignments in a {\em learned objective function} of the texture optimization.   
+ Rather than using a traditional object function, like $L1$ or $L2$, we learn a new objective function (adversarial loss) that is robust to the types of misalignment present in the input data.  This novel approach eliminates the need for hand-crafted parametric models for fixing the camera parameters \cite{zhou2014color,huang20173dlite} or image mapping \cite{bi2017patch,zhou2014color} or color balance \cite{huang20173dlite} (bottom row of Figure~\ref{fig:toptim-concept}) and replaces them all with a learned evaluation metric.   As such, it adapts to the input data.
+ 
+Inspired by the success of adversarial networks in image synthesis~\cite{goodfellow2014generative}, we propose to use a learned conditional discriminator to serve our {\em objective function} and jointly optimize the color texture of a reconstructed surface with this discriminator.
+The condition is a captured image $I_A$ from the source view $V_A$, and the query is either (i) ``real:'' a second captured image $I_B$ (from an auxiliary view $V_B$) projected onto the surface and then rendered back to $V_A$, or (ii) ``fake:'' an image of the optimized synthetic texture rendered to view $V_A$. By optimizing the surface texture while jointly training this conditional discriminator, we aim to produce a texture that is indistinguishable from reprojections of captured images from all other views.  
+%
+During the optimization, the discriminator learns invariance to the misalignments and distortions present in the input dataset, while recognizing synthetic artifacts that do not appear in the real images, like local blurs and seams.  The synthesized textures optimized to fool the discriminator appear more realistic than in previous approaches.
+
+\section{Related Work}
+\label{related:texture-recon}
+
+\subsection{Geometry Priors}
+Many computer graphics applications use approximated geometry priors with high-quality textures to create a real-time and appealing visual effect. Therefore, our texture reconstruction is optionally performed with the geometry approximation using abstract primitives or CAD models.
+
+\paragraph*{Imposters} The idea of approximating distant geometry through images called {\em impostors} was widely used in the image-based rendering literature~\cite{sillion1997efficient,decoret1999multi}. 
+These images are actually textured planes optimally positioned to generate approximately correct views from a range of viewpoints.
+Image-based rendering has also been recently used in custom renderers with a geometry proxy and achieved high-quality results using sparse DSLR input images \cite{hedman2016scalable}.
+
+\paragraph*{Primitive Abstraction} Since man-made environments are typically constructed in a highly-structured fashion, with an abundance of orthogonal and parallel planes, a Manhattan plane assumption can be exploited to facilitate tracking in indoor scenes, particularly in the case of RGB-D scanning, as depth information is directly available.
+Many methods have been developed to incorporate planar information to improve camera tracking in 3D scanning scenarios.
+Dou et al.~\cite{dou2012exploring} and Taguchi et al.~\cite{taguchi2013point} both incorporate various plane correspondences with feature point correspondences to improve tracking robustness.
+Zhang et al.~\cite{zhang2015online} detect both planar structures and repeated objects to mitigate camera drift, achieving improved reconstruction quality in a KinectFusion-style framework.
+In order to reduce sensitivity towards potential errors in initially detected structural correspondences, Halber and Funkhouser~\cite{halber2016fine} employ a hierarchical optimization approach incorporating planar relationship constraints with sparse features, enabling registration of very long RGB-D scanning sequences.
+In addition to improving tracking robustness, Dzitsiuk et al.~\cite{dzitsiuk2016noising} use plane priors estimated directly on the implicit signed distance field representation of the scene to further de-noise and complete the reconstruction, producing very stable geometry even during real-time updates.
+Surface measurements near detected planes are replaced with the plane measurements to reduce noise, and plane geometry is extrapolated in unobserved space to fill holes.
+
+\paragraph*{CAD Model Replacement} Recently, we are witnessing growing efforts to replace the observed noisy, cluttered and partial scans with clean geometry, such as artist-created CAD models~\cite{Li:2015,Avetisyan:2019,Avetisyan:2019:Scan2CAD,Dahnert:2019}. In this way, eventually, an entire scene can be virtualized into a set of 3D models that are free of noise, partiality, and scanning artifacts -- while maintaining the semantically valid structure and realistic appearance. One straightforward way to achieve this goal is to replace the sensor data by a known CAD model \textit{retrieved} from an existing repository.
+
+\paragraph*{Texture Reconstruction with Geometry Priors} Our approaches similarly exploit planes and CAD model replacement as a clean geometric representation of a 3D scene or an object. Different from existing methods that focus on geometry cleaning, we aim at creating visually compelling models by generating high-quality texture on top of the geometry priors.
+
+\subsection{Texture Optimization}
+\paragraph*{Parametric Color Optimization}
+Several approaches have been proposed to improve the mapping of input images to textures with parametric models,
+leveraging both human supervision~\cite{franken2005minimizing,ofek1997multiresolution,neugebauer1999texturing,rocchini1999multiple,stamos20003d,pighin2006synthesizing,xu2019deep} as well as automatic optimization~\cite{bernardini2001high,pulli2000surface}. 
+Given precisely registered pairs of color and depth, camera poses can be optimized for to maximize photo-consistency~\cite{johnson1999registration,pulli2000surface,pulli2005projective,bernardini2001high}. For 3D scanning using commodity-sensor data with various misalignments arising from coarse geometry and optical irregularities, Zhou and Koltun~\cite{zhou2014color} account for these issues by optimizing for both the rigid camera poses as well as non-rigid warping for each image to maximize dense photo-consistency.
+
+Our first approach, \emph{3DLite}~\cite{huang20173dlite}, also builds upon the approach of Zhou et al.~\cite{zhou2014color}; however, for our room-scale scenario, optimizing purely for a dense energy term remains sensitive to initial poses and easy to end up in local minima. 
+Rather, we employ a sparse-to-dense optimization, using sparse color features and geometric primitive constraints to help reach the basin of convergence of the dense photo-consistency energy.
+While these methods are able to fix small misalignments, their deformation models are often not expressive enough to handle many real-world distortions, particularly those due to largely approximate surface geometry. 
+In contrast to a hand-crafted deformation model, our second approach, \emph{Adversarial Texture Optimization}~\cite{huang2020adversarial}, learns a distortion-tolerant adversarial loss.
+
+\paragraph*{Patch-based Color Optimization}
+Patch-based image synthesis strategies have been proposed for color texture optimization~\cite{bi2017patch}. Rather than non-rigid image warping, they re-synthesize the input image with the nearest patch search~\cite{simakov2008summarizing} to handle misalignments. 
+However, general misalignment cannot be accurately modeled by translating patches, and the L2 loss is not robust to color, lighting or sharpness differences. Our first approach~\cite{huang20173dlite} instead compensates the lighting errors with explicit parametric models, while our second method~\cite{huang2020adversarial} optimizes the discriminator to cover all these problems without requiring explicit re-synthesis.
+
+\paragraph*{View Aggregation} Common texture reconstruction methods~\cite{izadi2011kinectfusion,zhou2014color} average projected input images to generate textures.  
+To reduce blurriness artifacts caused by average aggregation, some approaches select a single or a few candidate views for each region \cite{dessein2014seamless}. Others formulate a multi-label selection energy minimization problem to minimize seam artifacts~\cite{lempitsky2007seamless,sinha2008interactive,velho2007projective,waechter2014let}. Our first approach~\cite{huang20173dlite} further takes pixel sharpness into consideration given commonly existing motion blur in the commodity sensors. We aim at selecting the best view for each region to balance the visual sharpness and color consistency of boundaries between neighboring regions with different views selected, which is modeled as a multi-label graph-cut problem~\cite{boykov2001fast}. Our second method~\cite{huang2020adversarial} does not explicitly define the aggregation method, but implicitly aggregates colors from different views based on a learned adversarial metric.
+
+\paragraph*{Neural Textures}
+Recently, neural rendering approaches have been proposed to synthesize a feature map on a surface that can be interpreted by a deep network to produce novel image views.  For instance, \cite{thies2019deferred} stores appearance information as high-dimensional features in a neural texture map associated with the coarse geometry proxy and decodes to color when projected to novel views.  \cite{sitzmann2019deepvoxels} stores the appearance information as high-dimensional features in volumes, and \cite{aliev2019neural} uses features stored with points. These methods rely on the representation power of generative networks at rendering times to obtain novel viewpoints, which limits their applicability in standard graphics pipelines. Further, there is no guarantee that the trained neural textures are robust to novel views far from the training viewpoints. In comparison, our second method~\cite{huang2020adversarial} uses the neural architecture as a deep metric and optimizes for the low-dimensional RGB textures, which is friendly to traditional graphics pipelines and guarantees consistent novel viewpoint rendering.
+
 
 \section{Texture Optimization with Explicit Model}
 \label{sec:toptim}
@@ -14,33 +97,31 @@ In this chapter, we mainly study the texture reconstruction problem in two diffe
 %    \vspace{-0.2cm}    
     \label{fig:3dlite-overview}
 \end{figure}
-From an input RGB-D video, 3DLite\footnote{This section is mainly based on our work~\cite{huang20173dlite}.} first computes a primitive-based abstraction of the scene, and then leverages this representation to optimize for high-quality texture maps, as well as complete holes in the scene with both geometry and color; see Fig.~\ref{fig:3dlite-overview}.
+From an input RGB-D video, 3DLite\footnote{This section is mainly based on our work~\cite{huang20173dlite}.} first computes a primitive-based abstraction of the scene as the geometry prior, and then leverages this representation to optimize for high-quality texture maps, as well as complete holes in the scene with both geometry and color; see Fig.~\ref{fig:3dlite-overview}.
 We capture the input RGB-D stream with a handheld, consumer-grade RGB-D sensor.
 Using a modern RGB-D reconstruction system (i.e., BundleFusion~\cite{dai2016bundlefusion}), we compute initial camera poses for each frame and a truncated signed distance field (TSDF) representation of the scene, from which we extract an initial mesh.
-To generate the primitive-based abstraction, we detect planes for each frame, and then merge them into scene primitives according to the estimated camera poses (see section~\ref{sec:3dlite-plane-abstraction}).
-We then optimize for the global geometric structure by favoring primitives to support a Manhattan world assumption, so as to encourage orthogonal and parallel structures.
+To generate the geometry prior, we detect planes for each frame, and then merge them into scene primitives according to the estimated camera poses (see Section~\ref{sec:3dlite-plane-abstraction}).
+We then optimize for the global geometric structure by favoring primitives to support a Manhattan world assumption, so as to encourage orthogonal and parallel structures. We then complete the model to fill holes that were occluded or unseen in the original scan.
+While general, high-resolution scene completion is a very challenging task, our geometry prior enables effective hole-filling for both geometry and color on our scene representation.
+To complete the geometry of the model, we extrapolate primitives in unobserved space according to the camera trajectory, such that each primitive meets either another primitive or empty space (see Section~\ref{subsec:3dlite-extrapolate}).
 
 From this lightweight representation of the scene, we then optimize for texture maps over the geometry, directly addressing the issues of motion blur and small camera pose misalignments.
 We apply an exposure correction to achieve consistent color across the input images, which may vary with auto-exposure and white balancing (see section.~\ref{subsec:3dlite-color-transfer}).
 We must then refine the camera poses to precisely align the color frames to the new model geometry.
 To this end, we build upon the approach of Zhou and Koltun~\cite{zhou2014color} to optimize for refined camera poses and non-rigid image corrections.
-For our large-scale scanning scenario, we introduce sparse color feature and geometric primitive constraints to help bring the optimization into the basin of convergence of a dense photometric consistency energy (see section~\ref{subsec:3dlite-color-align}).
+For our large-scale scanning scenario, we introduce sparse color feature and geometric primitive constraints to help bring the optimization into the basin of convergence of a dense photometric consistency energy (see Section~\ref{subsec:3dlite-color-align}).
 In order to account for motion blur in input color images, we introduce a method to sharpen color projected from input frames to the model.
-Rather than select sharpest keyframes throughout the input video, which may still select relatively blurry frames or lose color information by filtering out too many frames, we seek sharp image regions, from which we formulate a graph-cut based optimization for image sharpness and coherence (see section~\ref{subsec:3dlite-color-sharp}). 
+Rather than select sharpest keyframes throughout the input video, which may still select relatively blurry frames or lose color information by filtering out too many frames, we seek sharp image regions, from which we formulate a graph-cut based optimization for image sharpness and coherence (see Section~\ref{subsec:3dlite-color-sharp}). 
 %\angie{plz check this sharpening part} \jingweiNote{Additionally, we select $\triangle I$ from the sharpest region, and optimize the final texture combining $\triangle I$ and averaged color. Do we describe it here?}
 This leads to a high-quality texture map over the known geometry.
-
-We then complete the textured model to fill holes that were occluded or unseen in the original scan.
-While general, high-resolution scene completion is a very challenging task, our primitive-based abstraction enables effective hole-filling for both geometry and color on our scene representation.
-To complete the geometry of the model, we extrapolate primitives in unobserved space according to the camera trajectory, such that each primitive meets either another primitive or empty space (see section~\ref{subsec:3dlite-extrapolate}). %\angie{is this actually true? also, are we doing things different from dzitsiuk2016noising?} \jingweiNote{We extrapolate two planes to connect them, otherwise, we don't extrapolate any plane even if there is unobserved space. Should be similar to dzitsiuk2016noising, but they really don't have a good explanation on this part.}
-We then complete the color in these regions through image inpainting, following  Image Melding~\cite{darabi2012image} (see section~\ref{subsec:3dlite-inpaint}).
+We then complete the color in these regions through image inpainting, following  Image Melding~\cite{darabi2012image} (see Section~\ref{subsec:3dlite-inpaint}).
 This produces a clean, complete, lightweight model mapped with sharp textures.
-\section{Primitive-Based Abstraction}
+
+\subsection{Geometry Priors}
 \label{sec:3dlite-plane-abstraction}
+To compute our primitive-based abstraction of a scanned scene as the geometry priors, we first detect planes for each input frame, then merge these detected planes into a globally consistent set of primitives, and finally perform a structural refinement, optimizing under parallel and orthogonal constraints.
 
-To compute our primitive-based abstraction of a scanned scene, we first detect planes for each input frame, then merge these detected planes into a globally consistent set of primitives, and finally perform a structural refinement, optimizing under parallel and orthogonal constraints.
-
-\subsection{Frame-based Plane Detection}
+\subsubsection{Frame-based Plane Detection}
 \label{subsec:3dlite-plane-detect}
 
 From an input RGB-D video sequence comprised of a set of depth and color frames $\{f_i = (\mathcal{C}_i, \mathcal{D}_i)\}$, we first use a state-of-the-art RGB-D reconstruction system to obtain initial camera poses $T_i$ (frame-to-world) for each frame, and an initial surface $\mathcal{S}_0$.
@@ -54,7 +135,7 @@ For each detected plane $\mathcal{P}_k$ in frame $f_i$, we additionally store tw
     We can then easily compute the average of square point-plane distances (ASD) of $\mathcal{P}_k$ with another plane $\mathcal{P}_l$ in frame $f_j$ as $(p_l^jT_j^{-1})\cdot \mathbf{D}\cdot (p_l^jT_j^{-1})^T$. 
 \end{itemize}
 
-\subsection{Primitive Classification}
+\subsubsection{Primitive Classification}
 \label{subsec:3dlite-plane-classify}
 
 We need to aggregate the per-frame planar regions into a set of plane primitives representing the planes in the 3D scene.
@@ -108,6 +189,83 @@ The optimization typically converges in about $10$ iterations, with resulting an
 %The angle error of each pair of planes in $\Omega$ is smaller than $1^{\circ}$, while the plane fitting error is about 1.1x bigger. 
 As a result, we can rectify the orthogonal structure of the planar primitives with very small trade-off from fitting accuracy.
 From this optimized result, we can produce a lightweight, clean mesh $\mathcal{S}_p$ by projecting the vertices of $\mathcal{S}_0$ to their associated primitives, as shown in Fig~\ref{fig:3dlite-plane-fit}(a). 
+
+\subsubsection{Scene completion}
+\label{sec:completion}
+
+While our lightweight mesh contains sharp, compelling color, it nonetheless remains incomplete, due to occlusions or limited scanning coverage.
+3D completion is a challenging task, as it typically requires example-based learning techniques~\cite{dai2017complete}, and the problem becomes cubically more complex with higher resolutions and larger spatial extents.
+We thus exploit our planar primitive abstraction to simplify 3D scene completion.%, as it can be extrapolated to 
+\begin{figure}
+    \centering
+    \includegraphics[width=0.8\linewidth]{3dlite/fig7.png}
+    \caption{Primitive fitting and extrapolation: (a) After primitive fitting and structural refinement, we project vertices to the primitives, producing a clean mesh. (b) We extrapolate primitives in occluded regions to close the surface.}
+    \label{fig:3dlite-plane-fit}
+\end{figure}
+
+\label{subsec:3dlite-extrapolate}
+\begin{figure}
+    \centering
+    \includegraphics[width=0.8\linewidth]{3dlite/fig9.png}
+    \caption{An example of extrapolation and hole filling. Left: Green lines represent possible intersections between sets of planes. Blue represents the original scene geometry, red the extrapolated regions, yellow removed original geometry extending past intersections, gray known empty space, and white self-contained holes which were filled. Right: Completed plane primitive with texture.}
+    \label{fig:3dlite-plane-fill}
+\end{figure}
+
+A plane-based primitive abstraction enables geometry completion by plane extrapolation in unseen regions~\cite{dzitsiuk2016noising}.
+We use several rules to guide our completion approach, visualized in Fig.~\ref{fig:3dlite-extrap-illus}:
+\begin{itemize}
+    \item Two planes should be extrapolated to their intersection if the extrapolated area is unobserved.
+    \item If three planes will intersect each other, extrapolate them to meet at a corner if the extrapolated area is unobserved.
+    \item No planes should be extrapolated into open space (observed to be empty). Note that we use the initial TSDF to determine known occupied, known empty, and unobserved space, according to the camera trajectory.
+    \item Holes self-contained in a plane should be filled if they are in unobserved space.
+\end{itemize}
+
+We search for all pairs of planes satisfying the first rule and extrapolate them. 
+Then, we find all triplets of planes under the second rule and extrapolate them. 
+Our algorithm is invariant to the extrapolation order since the final state forces all planes to meet in unobserved areas.
+For each pair of planar primitives, we attempt to detect potential extrapolation regions, and then repeat the same for all sets of three planar primitives which intersect. Finally, we fill in unobserved holes self-contained within planar primitives.
+Note that while this process achieves successful completion for scenes in which parts of all major planes have been observed, we cannot generate geometry from scratch in the case of very large regions of unobserved scene geometry (see Sec~\ref{subsec:3dlite-limitations} for further discussion).
+
+Figs.~\ref{fig:3dlite-plane-fit} and \ref{fig:3dlite-plane-fill} demonstrate our extrapolation and hole-filling to generate complete scenes.
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.8\linewidth]{3dlite/fig8.png}
+    \caption{Rules for plane extrapolation. (a) Two planes should extrapolate to their intersection. (b) Three planes should extrapolate to their intersection. (c) No planes should be extrapolated through known empty space. (d) Extrapolation (light red) can be viewed as a certain boundary (red) extending in the direction (blue) orthogonal to the intersection line. (e) A more complex example, showing invalidation of potential extrapolation due to known empty space. Only the blue regions should be extended towards the intersection.}
+    \label{fig:3dlite-extrap-illus}
+\end{figure}
+
+\subsubsection{Mesh Generation}
+\label{sec:approach-mesh}
+In section, we discuss the procedure to generate the final light-weight mesh. 
+We first denoise plane boundaries and then convert the planar primitive abstraction to a mesh, producing a final model $\approx 25$ times smaller than the original mesh.
+
+\paragraph*{Boundary Refinement.}
+Plane boundaries are often noisy, due to noise and distortion in the input sensor data and the initial reconstruction.
+To denoise the boundaries, we smooth them with a combination of line and B-spline fitting.
+Lines are fit to each vertex on the boundary (sampled at every 8mm) by using its $51$ neighboring vertices. 
+A vertex belongs to a line if the condition number of the covariance of these vertices is larger than 50.
+We then iteratively merge line-associated neighbor vertices together if their lines are no more than $5^\circ$ apart.
+We fit B-splines to each consecutive sequence of vertices not belonging to any lines.
+
+\begin{figure}
+\centering
+\includegraphics[width=0.75\linewidth]{3dlite/fig11.png}
+\caption{Smoothing the boundary. Initial plane primitive boundaries are noisy (left), which we smooth with B-Splines and lines (right).}
+\label{fig:boundary-fit}
+\end{figure}
+
+\paragraph*{Primitive Remeshing.}
+To generate our final mesh, we triangulate the planar primitives using constrained Delaunay triangulation~\cite{chew1987constrained}. 
+Figure~\ref{fig:3dlite-remesh}(a) shows the resulting simplified triangle mesh, which accurately preserves primitive boundaries.
+Because we use discretized pixels to generate the original primitive boundaries, there can be small gaps between primitives which should be connected. 
+To close these gaps, we project vertices near primitive intersections to the intersecting primitive, as shown in Figure~\ref{fig:3dlite-remesh}(b).
+\begin{figure}
+\centering
+\includegraphics[width=0.8\linewidth]{3dlite/fig12.png}
+\caption{Mesh simplification and vertex projection. (a) We simplify the planar primitives with constrained Delaunay triangulation. (b) We apply vertex projection to close the surfaces which should be connected.}
+\label{fig:3dlite-remesh}
+\end{figure}
 
 \subsection{Texture Optimization}
 \label{sec:approach-texture}
@@ -288,53 +446,7 @@ As shown in Fig.~\ref{fig:3dlite-sharp-poisson}, this maintains sharpness while 
 \label{fig:3dlite-sharp-poisson}
 \end{figure}
 
-\subsection{Scene completion}
-\label{sec:completion}
-
-While our texture-optimized, lightweight mesh contains sharp, compelling color, it nonetheless remains incomplete, due to occlusions or limited scanning coverage.
-3D completion is a challenging task, as it typically requires example-based learning techniques~\cite{dai2017complete}, and the problem becomes cubically more complex with higher resolutions and larger spatial extents.
-We thus exploit our planar primitive abstraction to simplify 3D scene completion in both geometry and color.%, as it can be extrapolated to 
-\begin{figure}
-    \centering
-    \includegraphics[width=0.8\linewidth]{3dlite/fig7.png}
-    \caption{Primitive fitting and extrapolation: (a) After primitive fitting and structural refinement, we project vertices to the primitives, producing a clean mesh. (b) We extrapolate primitives in occluded regions to close the surface.}
-    \label{fig:3dlite-plane-fit}
-\end{figure}
-
-\subsubsection{Geometry Completion}
-\label{subsec:3dlite-extrapolate}
-\begin{figure}
-    \centering
-    \includegraphics[width=0.8\linewidth]{3dlite/fig9.png}
-    \caption{An example of extrapolation and hole filling. Left: Green lines represent possible intersections between sets of planes. Blue represents the original scene geometry, red the extrapolated regions, yellow removed original geometry extending past intersections, gray known empty space, and white self-contained holes which were filled. Right: Completed plane primitive with texture.}
-    \label{fig:3dlite-plane-fill}
-\end{figure}
-
-A plane-based primitive abstraction enables geometry completion by plane extrapolation in unseen regions~\cite{dzitsiuk2016noising}.
-We use several rules to guide our completion approach, visualized in Fig.~\ref{fig:3dlite-extrap-illus}:
-\begin{itemize}
-    \item Two planes should be extrapolated to their intersection if the extrapolated area is unobserved.
-    \item If three planes will intersect each other, extrapolate them to meet at a corner if the extrapolated area is unobserved.
-    \item No planes should be extrapolated into open space (observed to be empty). Note that we use the initial TSDF to determine known occupied, known empty, and unobserved space, according to the camera trajectory.
-    \item Holes self-contained in a plane should be filled if they are in unobserved space.
-\end{itemize}
-
-We search for all pairs of planes satisfying the first rule and extrapolate them. 
-Then, we find all triplets of planes under the second rule and extrapolate them. 
-Our algorithm is invariant to the extrapolation order since the final state forces all planes to meet in unobserved areas.
-For each pair of planar primitives, we attempt to detect potential extrapolation regions, and then repeat the same for all sets of three planar primitives which intersect. Finally, we fill in unobserved holes self-contained within planar primitives.
-Note that while this process achieves successful completion for scenes in which parts of all major planes have been observed, we cannot generate geometry from scratch in the case of very large regions of unobserved scene geometry (see Sec~\ref{subsec:3dlite-limitations} for further discussion).
-
-Figs.~\ref{fig:3dlite-plane-fit} and \ref{fig:3dlite-plane-fill} demonstrate our extrapolation and hole-filling to generate complete scenes.
-
-\begin{figure}
-    \centering
-    \includegraphics[width=0.8\linewidth]{3dlite/fig8.png}
-    \caption{Rules for plane extrapolation. (a) Two planes should extrapolate to their intersection. (b) Three planes should extrapolate to their intersection. (c) No planes should be extrapolated through known empty space. (d) Extrapolation (light red) can be viewed as a certain boundary (red) extending in the direction (blue) orthogonal to the intersection line. (e) A more complex example, showing invalidation of potential extrapolation due to known empty space. Only the blue regions should be extended towards the intersection.}
-    \label{fig:3dlite-extrap-illus}
-\end{figure}
-
-\subsection{Texture Completion}
+\subsubsection{Texture Completion}
 \label{subsec:3dlite-inpaint}
 Our plane-based primitive abstraction reduces the 3D texture completion problem into a two-dimensional one over plane textures.
 As this texture synthesis problem is a classical one and has been well-studied~\cite{criminisi2004region,simakov2008summarizing,barnes2009patchmatch,darabi2012image,wang2016unsupervised,pathak2016context,yang2016high}, we employ state-of-the-art image inpainting techniques to complete texture in geometry-extrapolated regions.
@@ -351,39 +463,6 @@ We then combine the synthesized background with the foreground (Fig.~\ref{fig:3d
     \caption{Texture completion. (a) Original texture with green denoting regions to be synthesized. (b) Direct application of Image Melding~\cite{darabi2012image}. (c) Background color estimation. (d) Combined background and original texture. (e) Remaining pixels inpainted with Image Melding.}
     \label{fig:3dlite-synthesize}
 \end{figure}
-
-\subsection{Mesh Generation}
-\label{sec:approach-mesh}
-In section, we discuss the procedure to generate the final light-weight mesh. 
-We first denoise plane boundaries and then convert the planar primitive abstraction to a mesh, producing a final model $\approx 25$ times smaller than the original mesh.
-
-\paragraph*{Boundary Refinement.}
-Plane boundaries are often noisy, due to noise and distortion in the input sensor data and the initial reconstruction.
-To denoise the boundaries, we smooth them with a combination of line and B-spline fitting.
-Lines are fit to each vertex on the boundary (sampled at every 8mm) by using its $51$ neighboring vertices. 
-A vertex belongs to a line if the condition number of the covariance of these vertices is larger than 50.
-We then iteratively merge line-associated neighbor vertices together if their lines are no more than $5^\circ$ apart.
-We fit B-splines to each consecutive sequence of vertices not belonging to any lines.
-
-\begin{figure}
-\centering
-\includegraphics[width=0.8\linewidth]{3dlite/fig11.png}
-\caption{Smoothing the boundary. Initial plane primitive boundaries are noisy (left), which we smooth with B-Splines and lines (right).}
-\label{fig:boundary-fit}
-\end{figure}
-
-\paragraph*{Primitive Remeshing.}
-To generate our final mesh, we triangulate the planar primitives using constrained Delaunay triangulation~\cite{chew1987constrained}. 
-Figure~\ref{fig:3dlite-remesh}(a) shows the resulting simplified triangle mesh, which accurately preserves primitive boundaries.
-Because we use discretized pixels to generate the original primitive boundaries, there can be small gaps between primitives which should be connected. 
-To close these gaps, we project vertices near primitive intersections to the intersecting primitive, as shown in Figure~\ref{fig:3dlite-remesh}(b).
-\begin{figure}
-\centering
-\includegraphics[width=0.8\linewidth]{3dlite/fig12.png}
-\caption{Mesh simplification and vertex projection. (a) We simplify the planar primitives with constrained Delaunay triangulation. (b) We apply vertex projection to close the surfaces which should be connected.}
-\label{fig:3dlite-remesh}
-\end{figure}
-
 
 \subsection{Results}
 \label{sec:results}
@@ -576,8 +655,7 @@ Most notably, our current primitive abstraction is plane-based, so relatively no
     The texture image and discriminator are trained in an alternating process.}
     \label{fig:toptim-pipeline}
 \end{figure*}
-
-Our goal is the optimization of a color texture that can be used to render a scanned scene using a classical computer graphics pipeline.
+This work called adversarial texture\footnote{This section is mainly based on our work~\cite{huang2020adversarial}.} is the optimization of a color texture that can be used to render a scanned scene using a classical computer graphics pipeline.
 %
 During the scanning procedure, we obtain color images and their estimated camera poses.
 %
@@ -590,7 +668,7 @@ To this end, we propose to learn the loss function in conjunction with the textu
 The function is modeled as an adversarial loss using a discriminator network identifying `real' and `fake' imagery and is designed to provide a misalignment-tolerant metric for our texture optimization.
 %
 
-\subsection{Misalignment-Tolerant Metric}
+\subsubsection{Misalignment-Tolerant Metric}
 \label{sec:approach-misalign}
 
 
@@ -658,7 +736,7 @@ Finally, since we focus on evaluating foreground regions (pixels corresponding t
 %
 
 %\subsection{Conditional Adversarial Loss}
-\subsection{Texture Optimization}% of the Texture and the Metric}
+\subsubsection{Texture Optimization}% of the Texture and the Metric}
 
 %
 To retrieve a texture, we jointly optimize the texture and the misalignment-tolerant metric.
@@ -704,7 +782,7 @@ We optimize in alternating fashion for each optimization step, using the Adam op
 For each object or scene, we optimize for 50000 steps to finalize our texture. 
 %
 
-\subsection{Differentiable Rendering and Projection}
+\subsubsection{Differentiable Rendering and Projection}
 %
 %In the fake example synthesis, we need to render the texture into the view together with the gradient information.
 To enable the optimization of the RGB texture of a 3D model, we leverage a differentiable rendering to generate synthesized `fake' views.
@@ -767,26 +845,22 @@ Two example scenes with increasing errors in camera and geometry are shown in Fi
     \label{tab:toptim-cam-err}
 \end{table}
 \begin{figure}
-\begin{minipage}{0.49\linewidth}
     \centering
-    \includegraphics[width=\linewidth]{texturegen/figures/synth-results.pdf}
+    \includegraphics[width=0.6\linewidth]{texturegen/figures/synth-results.pdf}
     \caption{Texture generation in case of high camera or geometry errors. ColorMap~\cite{zhou2014color} cannot handle such large errors. Sharpest or 3DLite~\cite{huang20173dlite} selection leads to inconsistent boundaries or breaks structures. VGG~\cite{johnson2016perceptual} aggregates views by blending deep features with noises, which is not sufficient for handling misalignment artifacts. Ours is visually closest to the ground truth.}
     \label{fig:toptim-pose-visual}
-\end{minipage}
-\begin{minipage}{0.49\linewidth}
-\begin{minipage}{\linewidth}
+\end{figure}
+\begin{figure}
     \centering
-    \includegraphics[width=0.9\linewidth]{texturegen/figures/chart.pdf}
+    \includegraphics[width=0.6\linewidth]{texturegen/figures/chart.pdf}
     \caption{Perceptual loss of different approaches under increasing camera or geometry errors. Ours outperforms existing methods in different levels of errors.}
     \label{fig:toptim-pose-chart}
-\end{minipage}
-\begin{minipage}{\linewidth}
+\end{figure}
+\begin{figure}
     \centering
-    \includegraphics[width=\linewidth]{texturegen/figures/adversarial-compare.pdf}
+    \includegraphics[width=0.6\linewidth]{texturegen/figures/adversarial-compare.pdf}
     \caption{Comparing different discriminator options. (b) removes the auxiliary view from the discriminator, resulting in the lack of robustness to misalignments. (c) removes the condition from the discriminator, resulting in ambiguity in local regions. (d) our conditional discriminator leveraging auxiliary views to provide examples of realistic misalignments enables tolerance to misalignment and generation of textures reflecting input image characteristics. }
     \label{fig:toptim-gan-err}
-\end{minipage}
-\end{minipage}
 \end{figure}
 
 We additionally study the behavior of all methods in this experiment using the perceptual metric~\cite{zhang2018unreasonable} in Figure~\ref{fig:toptim-pose-chart}.
