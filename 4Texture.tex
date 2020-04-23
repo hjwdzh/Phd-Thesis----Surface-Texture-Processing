@@ -6,7 +6,7 @@ In this chapter, we study the texture reconstruction problem from two different 
 \label{sec:texturerecon-intro}
 We focus on high-quality texture reconstruction given inaccurate or abstracted geometry. We briefly introduce the technical contributions in this section, including building geometry priors from the scans and using an explicit parametric model or learned metric for texture optimization.
 
-\paragraph*{Geometry Priors}
+\paragraph*{Geometry Priors:}
 Our first approach, \emph{3DLite}~\cite{huang20173dlite}, generates lightweight, complete, CAD-like models of large-scale indoor scenes before we reconstruct high-quality textures.
 %
 We take as input an RGB-D video sequence from a handheld commodity sensor and first reconstruct the scene with existing 3D reconstruction methods.
@@ -20,7 +20,7 @@ This generates a complete geometric representation of the scene.
 %
 Our second approach, \emph{Adversarial Texture Optimization}~\cite{huang2020adversarial}, learns a deep-metric that tolerates complex misalignment between image observations and the target geometry. Therefore, we can replace the scanning geometry with clean human-created CAD models with geometry misalignments but still perform decent texture optimization.
 
-\paragraph*{Parametric Texture Optimization}
+\paragraph*{Parametric Texture Optimization:}
 Our first approach~\cite{huang20173dlite} performs a novel texture optimization to map the scene geometry with sharp colors from the input RGB data.
 Since camera poses estimated from noisy RGB-D data are prone to micro-drift, our texture optimization step solves for refined rigid and non-rigid image alignments, optimizing for photo-consistency using both sparse color and dense geometric information.
 %
@@ -28,7 +28,7 @@ Zhou \textit{et al.}~\cite{zhou2014color} optimize purely for a dense energy ter
 %
 To mitigate the effects of motion blur and auto-exposure, we perform an exposure correction and select and stitch together only the sharpest regions of the input RGB images, obtaining globally consistent, sharp colors. While existing methods reduce blurriness artifacts caused by average aggregation with single view selection~\cite{dessein2014seamless}, we further take pixel sharpness into consideration in the existence of motion blur. We select the best view for each region to balance the visual sharpness and color consistency of boundaries between neighboring regions with different views selected, which is modeled as a multi-label graph-cut problem~\cite{boykov2001fast}.
 
-\paragraph*{Adversarial Metric for Texture Optimization}
+\paragraph*{Adversarial Metric for Texture Optimization:}
 Prior approaches depend on explicit models and color consistency optimization, and are not expressive enough and/or their optimization algorithms are not robust enough to handle the complex distortions and misalignments commonly found in scans with commodity cameras.
 
 To address these issues, our second approach~\cite{huang2020adversarial} proposes a flexible texture optimization framework based on a learned metric that is robust to common scanning errors.
@@ -47,11 +47,11 @@ During the optimization, the discriminator learns invariance to the misalignment
 \subsection{Geometry Priors}
 Many computer graphics applications use approximated geometry priors with high-quality textures to create a real-time and appealing visual effect. Therefore, our texture reconstruction is optionally performed with the geometry approximation using abstract primitives or CAD models.
 
-\paragraph*{Imposters} The idea of approximating distant geometry through images called {\em impostors} was widely used in the image-based rendering literature~\cite{sillion1997efficient,decoret1999multi}. 
+\paragraph*{Impostors:} The idea of approximating distant geometry through images called {\em impostors} was widely used in the image-based rendering literature~\cite{sillion1997efficient,decoret1999multi}. 
 These images are actually textured planes optimally positioned to generate approximately correct views from a range of viewpoints.
 Image-based rendering has also been recently used in custom renderers with a geometry proxy and achieved high-quality results using sparse DSLR input images \cite{hedman2016scalable}.
 
-\paragraph*{Primitive Abstraction} Since man-made environments are typically constructed in a highly-structured fashion, with an abundance of orthogonal and parallel planes, a Manhattan plane assumption can be exploited to facilitate tracking in indoor scenes, particularly in the case of RGB-D scanning, as depth information is directly available.
+\paragraph*{Primitive Abstraction:} Since man-made environments are typically constructed in a highly-structured fashion, with an abundance of orthogonal and parallel planes, a Manhattan plane assumption can be exploited to facilitate tracking in indoor scenes, particularly in the case of RGB-D scanning, as depth information is directly available.
 Many methods have been developed to incorporate planar information to improve camera tracking in 3D scanning scenarios.
 Dou et al.~\cite{dou2012exploring} and Taguchi et al.~\cite{taguchi2013point} both incorporate various plane correspondences with feature point correspondences to improve tracking robustness.
 Zhang et al.~\cite{zhang2015online} detect both planar structures and repeated objects to mitigate camera drift, achieving improved reconstruction quality in a KinectFusion-style framework.
@@ -59,12 +59,12 @@ In order to reduce sensitivity towards potential errors in initially detected st
 In addition to improving tracking robustness, Dzitsiuk et al.~\cite{dzitsiuk2016noising} use plane priors estimated directly on the implicit signed distance field representation of the scene to further de-noise and complete the reconstruction, producing very stable geometry even during real-time updates.
 Surface measurements near detected planes are replaced with the plane measurements to reduce noise, and plane geometry is extrapolated in unobserved space to fill holes.
 
-\paragraph*{CAD Model Replacement} Recently, we are witnessing growing efforts to replace the observed noisy, cluttered and partial scans with clean geometry, such as artist-created CAD models~\cite{Li:2015,Avetisyan:2019,Avetisyan:2019:Scan2CAD,Dahnert:2019}. In this way, eventually, an entire scene can be virtualized into a set of 3D models that are free of noise, partiality, and scanning artifacts -- while maintaining the semantically valid structure and realistic appearance. One straightforward way to achieve this goal is to replace the sensor data by a known CAD model \textit{retrieved} from an existing repository.
+\paragraph*{CAD Model Replacement:} Recently, we are witnessing growing efforts to replace the observed noisy, cluttered and partial scans with clean geometry, such as artist-created CAD models~\cite{Li:2015,Avetisyan:2019,Avetisyan:2019:Scan2CAD,Dahnert:2019}. In this way, eventually, an entire scene can be virtualized into a set of 3D models that are free of noise, partiality, and scanning artifacts -- while maintaining the semantically valid structure and realistic appearance. One straightforward way to achieve this goal is to replace the sensor data by a known CAD model \textit{retrieved} from an existing repository.
 
-\paragraph*{Texture Reconstruction with Geometry Priors} Our approaches similarly exploit planes and CAD model replacement as a clean geometric representation of a 3D scene or an object. Different from existing methods that focus on geometry cleaning, we aim at creating visually compelling models by generating high-quality texture on top of the geometry priors.
+\paragraph*{Texture Reconstruction with Geometry Priors:} Our approaches similarly exploit planes and CAD model replacement as a clean geometric representation of a 3D scene or an object. Different from existing methods that focus on geometry cleaning, we aim at creating visually compelling models by generating high-quality texture on top of the geometry priors.
 
 \subsection{Texture Optimization}
-\paragraph*{Parametric Color Optimization}
+\paragraph*{Parametric Color Optimization:}
 Several approaches have been proposed to improve the mapping of input images to textures with parametric models,
 leveraging both human supervision~\cite{franken2005minimizing,ofek1997multiresolution,neugebauer1999texturing,rocchini1999multiple,stamos20003d,pighin2006synthesizing,xu2019deep} as well as automatic optimization~\cite{bernardini2001high,pulli2000surface}. 
 Given precisely registered pairs of color and depth, camera poses can be optimized for to maximize photo-consistency~\cite{johnson1999registration,pulli2000surface,pulli2005projective,bernardini2001high}. For 3D scanning using commodity-sensor data with various misalignments arising from coarse geometry and optical irregularities, Zhou and Koltun~\cite{zhou2014color} account for these issues by optimizing for both the rigid camera poses as well as non-rigid warping for each image to maximize dense photo-consistency.
@@ -74,14 +74,14 @@ Rather, we employ a sparse-to-dense optimization, using sparse color features an
 While these methods are able to fix small misalignments, their deformation models are often not expressive enough to handle many real-world distortions, particularly those due to largely approximate surface geometry. 
 In contrast to a hand-crafted deformation model, our second approach, \emph{Adversarial Texture Optimization}~\cite{huang2020adversarial}, learns a distortion-tolerant adversarial loss.
 
-\paragraph*{Patch-based Color Optimization}
+\paragraph*{Patch-based Color Optimization:}
 Patch-based image synthesis strategies have been proposed for color texture optimization~\cite{bi2017patch}. Rather than non-rigid image warping, they re-synthesize the input image with the nearest patch search~\cite{simakov2008summarizing} to handle misalignments. 
 However, general misalignment cannot be accurately modeled by translating patches, and the L2 loss is not robust to color, lighting or sharpness differences. Our first approach~\cite{huang20173dlite} instead compensates the lighting errors with explicit parametric models, while our second method~\cite{huang2020adversarial} optimizes the discriminator to cover all these problems without requiring explicit re-synthesis.
 
-\paragraph*{View Aggregation} Common texture reconstruction methods~\cite{izadi2011kinectfusion,zhou2014color} average projected input images to generate textures.  
+\paragraph*{View Aggregation:} Common texture reconstruction methods~\cite{izadi2011kinectfusion,zhou2014color} average projected input images to generate textures.  
 To reduce blurriness artifacts caused by average aggregation, some approaches select a single or a few candidate views for each region \cite{dessein2014seamless}. Others formulate a multi-label selection energy minimization problem to minimize seam artifacts~\cite{lempitsky2007seamless,sinha2008interactive,velho2007projective,waechter2014let}. Our first approach~\cite{huang20173dlite} further takes pixel sharpness into consideration given commonly existing motion blur in the commodity sensors. We aim at selecting the best view for each region to balance the visual sharpness and color consistency of boundaries between neighboring regions with different views selected, which is modeled as a multi-label graph-cut problem~\cite{boykov2001fast}. Our second method~\cite{huang2020adversarial} does not explicitly define the aggregation method, but implicitly aggregates colors from different views based on a learned adversarial metric.
 
-\paragraph*{Neural Textures}
+\paragraph*{Neural Textures:}
 Recently, neural rendering approaches have been proposed to synthesize a feature map on a surface that can be interpreted by a deep network to produce novel image views.  For instance, \cite{thies2019deferred} stores appearance information as high-dimensional features in a neural texture map associated with the coarse geometry proxy and decodes to color when projected to novel views.  \cite{sitzmann2019deepvoxels} stores the appearance information as high-dimensional features in volumes, and \cite{aliev2019neural} uses features stored with points. These methods rely on the representation power of generative networks at rendering times to obtain novel viewpoints, which limits their applicability in standard graphics pipelines. Further, there is no guarantee that the trained neural textures are robust to novel views far from the training viewpoints. In comparison, our second method~\cite{huang2020adversarial} uses the neural architecture as a deep metric and optimizes for the low-dimensional RGB textures, which is friendly to traditional graphics pipelines and guarantees consistent novel viewpoint rendering.
 
 
@@ -240,7 +240,7 @@ Figs.~\ref{fig:3dlite-plane-fit} and \ref{fig:3dlite-plane-fill} demonstrate our
 In section, we discuss the procedure to generate the final light-weight mesh. 
 We first denoise plane boundaries and then convert the planar primitive abstraction to a mesh, producing a final model $\approx 25$ times smaller than the original mesh.
 
-\paragraph*{Boundary Refinement.}
+\paragraph*{Boundary Refinement:}
 Plane boundaries are often noisy, due to noise and distortion in the input sensor data and the initial reconstruction.
 To denoise the boundaries, we smooth them with a combination of line and B-spline fitting.
 Lines are fit to each vertex on the boundary (sampled at every 8mm) by using its $51$ neighboring vertices. 
@@ -255,7 +255,7 @@ We fit B-splines to each consecutive sequence of vertices not belonging to any l
 \label{fig:boundary-fit}
 \end{figure}
 
-\paragraph*{Primitive Remeshing.}
+\paragraph*{Primitive Remeshing:}
 To generate our final mesh, we triangulate the planar primitives using constrained Delaunay triangulation~\cite{chew1987constrained}. 
 Figure~\ref{fig:3dlite-remesh}(a) shows the resulting simplified triangle mesh, which accurately preserves primitive boundaries.
 Because we use discretized pixels to generate the original primitive boundaries, there can be small gaps between primitives which should be connected. 
@@ -337,7 +337,7 @@ Following Zhou and Koltun, we also optimize for proxy variables $C(p_i)$ denotin
 We perform this optimization hierarchically in coarse-to-fine fashion to aid convergence at fine-scale resolution, using 3 hierarchy levels in which $p_i$ are sampled at $0.032$m, $0.008$m, $0.002$m from the primitive-abstracted $\mathcal{S}_p$, respectively.
 $\lambda_s$ and $\lambda_p$ are set such that $E_c(\mathbf{T}_0)=\lambda_s E_s(\mathbf{T}_0) = \lambda_p E_p(\mathbf{T}_0)$.
 
-\paragraph*{Sparse Term.}
+\paragraph*{Sparse Term:}
 In our sparse matching term, we minimize the sum of world-space distances between pairs of sparse feature correspondences transformed from image space to the space of the 3D primitives. 
 For a frame $f_i$ and plane primitive $\mathcal{P}_k$, we transform a pixel $p_i$ under the homography $H_k^i$, depending on $\mathcal{P}_k$ and the camera pose $T_i$, to bring it into the space of the primitive $\mathcal{P}_k$.
 Then for a pixel correspondence $\{p_{im},p_{jm}\}$ from frames $f_i$ and $f_j$ and which correspond to 3D primitives $\mathcal{P}_k$ and $\mathcal{P}_l$ (when projected in 3D under the current camera poses), we optimize for the energy
@@ -352,7 +352,7 @@ Correspondences are determined by SIFT matching followed by a verification step 
 Valid correspondence features are then back-projected to the original color frames to compose the sparse feature set. 
 This produces a robust set of feature correspondences, since the projection into a 3D plane does not rely on depth maps which contain noise and distortion, and matching in the warped space contains reduced scale and affine variance than in the original color images.
 
-\paragraph*{Primitive Constraint Term.}
+\paragraph*{Primitive Constraint Term:}
 We restrict the per-frame planar regions computed in Sec~\ref{subsec:3dlite-plane-detect} to align well with $\mathcal{S}_p$, geometrically.
 \begin{equation}
 E_g(\mathbf{T}) = \sum_{i} \sum_{j} (P_j T_j^{-1} p_i)^T (P_j T_j^{-1} p_i)\,.
@@ -360,7 +360,7 @@ E_g(\mathbf{T}) = \sum_{i} \sum_{j} (P_j T_j^{-1} p_i)^T (P_j T_j^{-1} p_i)\,.
 \end{equation}
 Here, $p_i$ is the homogeneous coordinate of the sampled 3D points from $\mathcal{S}_p$. $P_j$ is the camera-space plane parameter (as in Sec.~\ref{subsec:3dlite-plane-detect}) of the $i$-th planar region of frame $j$.
 
-\paragraph*{Dense Term.} 
+\paragraph*{Dense Term:} 
 Finally, the dense term measures photo-metric error from the color frames projected onto $\mathcal{S}_p$.
 \begin{equation}
 E_c(\mathbf{T}) = \sum_{i} ||C(p_i) - \sum_j I_j(\pi(T_j^{-1}p_i))||^2\,,
@@ -722,7 +722,7 @@ We linearly combine adversarial loss with an L1 loss that decays exponentially a
     \label{fig:toptim-misalign-example}
 \end{figure}
 
-\paragraph{Network Architecture}
+\paragraph{Network Architecture:}
 %
 Our framework is adopted from the PatchGAN discriminator architecture proposed by Isola et al.~\cite{isola2017image}.  We choose that framework because it is designed to produce local details that look as realistic as a given set of input images.
 %
@@ -796,14 +796,14 @@ The pixel is visible in the auxiliary view if $\mathbf{P}_B$ is in the scope of 
 
 \subsection{Experiments}
 
-\paragraph*{Evaluation Metric}
+\paragraph*{Evaluation Metric:}
 For evaluation, we adopt several different metrics to measure the quality of the generated texture compared to the ground truth. 
 First, we propose the nearest patch loss as an indicator of how close the patch appearance of the texture is to the ground truth. Specifically, for each pixel $\mathbf{u}$ we extract a $7\times 7$ patch centered around it in the generated texture and find the L2 distance $d(\mathbf{u})$ between it and the nearest neighbor patch in the ground truth texture. We define the nearest patch loss as the average of all $d(\mathbf{u})$.
 Second, we adopt the perceptual metric~\cite{zhang2018unreasonable} to evaluate perceptual quality. 
 Finally, we propose to measure the difference between generated textures and ground truth according to sharpness~\cite{vu2011bf} and the average intensity of image gradients, in order to evaluate how robust the generated textures are to blurring artifacts without introducing noise artifacts. 
 Note that standard image quality metrics such as the mean square error, PSNR~\cite{de2003improved} or SSIM~\cite{brunet2011mathematical} are ill-suited, as they assume perfect alignment between target and the ground truth \cite{zhang2018unreasonable}.
 
-\paragraph*{Synthetic 2D Example}
+\paragraph*{Synthetic 2D Example:}
 We first verify the effectiveness of our method with a synthesized 2D example. 
 We aim to optimize for a 2D image, given input observations with 2D micro-translation errors.
 We use an image resolution of $512\times 512$ and translation error $\in[-16,16]^2$. 
@@ -823,7 +823,7 @@ Visually, our optimized image is sharper and perceptually closer to the ground t
 In this simple setting, we evaluate the exact patch loss for each pixel quantitatively as the L2 distance of patches centered at this pixel between the generated image and the same one in the ground truth. The exact overall exact patch loss is the L2 norm of exact patch losses for all pixels. We additionally evaluate the nearest patch loss.
 Optimization with the L1 loss achieves 10.7 exact patch loss while ours is 11.3. However, we achieve 1.53 nearest patch loss, which is smaller than L1 as 7.33. This suggests that our method prefers realistic misalignment to blur. We successfully derive an image where every local patch is nearly identical to a misaligned version of the patch in the ground truth image.
 
-\paragraph*{Synthetic 3D Example}
+\paragraph*{Synthetic 3D Example:}
 %\paragraph*{Robust to Camera or Geometry Errors?}
 In order to quantitatively evaluate our 3D texture generation, we create a synthetic dataset of 16 models randomly selected from ShapeNet~\cite{chang2015shapenet} across different categories. 
 These shapes typically contain sharp edges and self-occlusion boundaries, complexities reflecting those of real-world objects.
@@ -879,7 +879,7 @@ Removing the auxiliary view (b) and thus relying only on the source view to prov
 We also evaluate a  general discriminator that classifies whether a generated patch is real or fake among entire input view sets without any condition (c), resulting in ambiguity regarding where real patches come from. 
 Our conditional discriminator leveraging reprojected auxiliary views enables robustness to misalignment, resulting in realistic texturing.
 
-\paragraph*{Real Object Scans}
+\paragraph*{Real Object Scans:}
 We compare our method to state-of-the-art texturing methods on scanned objects from real environments. We use a structure sensor\footnote{https://structure.io} along with its SLAM system to scan 35 chairs, producing scanned geometry, RGB-D frames and the camera poses ($\approx 500$ frames per scan). 
 The foreground/background for the object in the RGB frames is determined by whether a ray intersects with the reconstructed geometry. Figure~\ref{fig:toptim-object-scan} (rows 1-4) shows qualitative comparisons.
 With an L1 loss or ColorMap~\cite{zhou2014color}, blur artifacts are induced by misalignment errors.
@@ -889,14 +889,14 @@ Our approach produces sharp and consistent texturing, including detailed pattern
 
 Additionally, we show a quantitative evaluation in Table~\ref{tab:toptim-result} (first column) by evaluating the perceptual metric~\cite{zhang2018unreasonable} for rendered textures against input observed views; our approach achieves the most realistic texturing.
 
-\paragraph*{Real Scene Scans}
+\paragraph*{Real Scene Scans:}
 To demonstrate the capability of our approach to optimize texture on a larger scale, we run our algorithm on the ScanNet dataset~\cite{dai2017scannet}, which provides RGB-D sequences and reconstructed geometry of indoor scenes.
 We evaluate our approach on scenes with ID $\leq 20$ ($\approx 2000-3000$ frames per scan) and compare it with the existing state of the arts. 
 Figure~\ref{fig:toptim-object-scan} (rows 5-9) and Table~\ref{tab:toptim-result} (middle column) show qualitative and quantitative comparisons. 
 Our method produces texturing most perceptually similar to the observed images; our misalignment-tolerant metrics aids in avoiding blur, increased sharpness, or excess noise produces by other methods due to camera and geometry errors in real-world scans.
 %We achieve better visual results compared to all other approaches with sharper or more consistent textures. Figure~\ref{fig:toptim-object-scan} (row 5-9) shows a visual comparison among different methods, where our result looks closest to the ground truth images.
 
-\paragraph*{Real to CAD Models}
+\paragraph*{Real to CAD Models:}
 Since our method can better handle errors due to approximate surface geometry, it is possible to consider texturing CAD models using real-world images to attain realistic appearances.   While large datasets of 3D CAD models are now available~\cite{chang2015shapenet}, they are often untextured or textured simplistically, resulting in notably different appearance from real-world objects. 
 To test whether our method can be applied in this challenging scenario, 
 %We thus apply our approach to texturing CAD models using real-world imagery, to provide a more realistic appearance despite both differing geometry of synthetic CAD models and real-world objects as well as camera errors in captured imagery. To this end, 
@@ -906,7 +906,7 @@ Qualitative and quantitative evaluation of our approach in comparison to existin
 Our approach is able to handle both cameras' poses errors as well as the synthetic-real geometry differences to produce texturing perceptually very similar to observed imagery, whereas other methods suffer strong blur, noise, and seam artifacts under these errors.
 %, it opens the potential for attaching real-world appearance to the CAD models. We manually find the chairs as CAD models in ShapeNet which looks similar to the scanned model, and we apply a rigid 3D transformation to roughly align them. Then, we replace the scanned geometry with the CAD model and aim at mapping the color information from the scanning video to it. Figure~\ref{fig:toptim-object-scan} (row 10-13) shows the results from different approaches on painting CAD models. Our approach produces minimum artifacts and faithfully paint textures on top of the CAD models.
 
-\paragraph*{Evaluation}
+\paragraph*{Evaluation:}
 \begin{figure}
 \begin{minipage}{0.49\linewidth}
     \centering

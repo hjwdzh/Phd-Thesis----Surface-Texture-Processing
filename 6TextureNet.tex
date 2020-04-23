@@ -13,10 +13,10 @@ Results on 3D semantic segmentation benchmarks show an improvement of the 4-RoSy
 
 \subsection{Related Work}
 \label{related:texturenet}
-\paragraph*{3D Deep Learning.}
+\paragraph*{3D Deep Learning:}
 With the availability of 3D shape databases \cite{wu20153d,chang2015shapenet,song2017semantic} and real-world labeled 3D scanning data \cite{song2015sun,armeni2017joint,dai2017scannet,chang2017matterport3d}, there is significant interest in deep learning on three-dimensional data.   Early work developed CNNs operating on 3D volumetric grids \cite{wu20153d,maturana2015voxnet}.  They have been used for 3D shape classification  \cite{qi2016volumetric,riegler2017octnet}, semantic  segmentation \cite{dai2017scannet,dai2018scancomplete}, object completion \cite{dai2017shape}, and scene completion \cite{dai2018scancomplete}.   More recently, researchers have developed methods that can take a 3D point cloud as input to a neural network and predict object classes or semantic point labels \cite{qi2017pointnet,qi2017pointnet++,tatarchenko2018tangent,su2018splatnet,atzmon2018point}.  AtlasNet~\cite{groueix2018papier} learns to generate surfaces of the 3D shape.  In our work, we utilize a sparse point sampled data representation, however, we exploit high resolution signals on geometric surface structures with a new 4-RoSy surface convolution kernel.
 
-\paragraph*{Convolutions on Meshes.}
+\paragraph*{Convolutions on Meshes:}
 Several researchers have proposed methods for applying convolutional neural networks intrinsically on manifold meshes.  FeaStNet~\cite{verma2018feastnet} proposes a graph operator that establishes correspondences between filter weights. Jiang \textit{et al.}~\cite{jiang2019spherical} applies differential operators on unstructured spherical grids.
 GCNN~\cite{masci2015geodesic} proposes using discrete patch operators on tangent planes parameterized by radius and angles. 
 However, the orientation of their selected geodesic patches is arbitrary, and the parameterization is highly distorted or inconsistent at regions with high Gaussian curvature. 
@@ -24,7 +24,7 @@ ACNN~\cite{boscaini2016learning} observes this limitation and introduces the ani
 The principal curvature based frame selection method is adopted by Xu \textit{et al.}~\cite{xu2017directionally} for segmentation of nonrigid surfaces, by Tatarchenko \textit{et al.}~\cite{tatarchenko2018tangent} for semantic segmentation of point clouds, and by ADD~\cite{boscaini2016anisotropic} for shape correspondence in the spectral domain. 
 It naturally removes orientation ambiguity but fails to consider frame inconsistency problem, which is critical when performing feature aggregation.  Its problems are particularly pronounced in indoor scenes (which often have many planar regions where principal curvatures are undetermined) and in real-world scans (which often have noisy and uneven sampling where consistent principal curvatures are difficult to predict).   In contrast, we define a 4-RoSy field that provides consistent orientations for neighboring convolution domains.
 
-\paragraph*{Multi-view and 2D-3D Joint Learning.}
+\paragraph*{Multi-view and 2D-3D Joint Learning:}
 Other researchers have investigated how to incorporate features from RGB inputs to 3D deep networks.  The typical approach is to simply assign color values to voxels, points, or mesh vertices and treat them as additional feature channels.
 However, given that geometry and RGB data are at vastly different resolutions, this approach leads to significant downsampling of the color signal and thus does not take full advantage of the high-frequency patterns therein.   An alternative approach is to combine features extracted from RGB images in a multi-view CNN \cite{su2015multi}. This approach has been used for 3D semantic segmentation in 3DMV \cite{dai20183dmv}, where features are extracted from 2D RGB images and then back-projected into a 3D voxel grid where they are merged and further processed with 3D voxel convolutions.  Like our approach, 3DMV processes high-resolution RGB signals; however it convolves them in a 2D image plane, where occlusions and background clutter are confounding.  In contrast, our method directly convolves high-resolution signals intrinsically on the 3D surface which is view-independent.
 

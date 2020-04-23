@@ -10,7 +10,7 @@ We discuss the approach in Section~\ref{sec:quad-method}, and evaluate our metho
 \label{sec:param-intro}
 We briefly introduce the technical contributions in this section, including the key challenges the previous solutions are facing and how we address the challenge.
 
-\paragraph*{Orientation and Singularity} State-of-the-art algorithms for quadrilateral surface meshing typically compute, as a first step, an \emph{orientation field} that assigns local coordinate axes to some points on the input surface \cite{knupp1995mesh,ray2006periodic,kalberer2007quadcover,bommes2009mixed}. The {\em Instant Field-Aligned Meshes} \mbox{algorithm} of Jakob et al.~\cite{jakob2015instant} subsequently computes a \emph{position field} that assigns local coordinates %(in the frame of the local coordinate axes)%
+\paragraph*{Orientation and Singularity:} State-of-the-art algorithms for quadrilateral surface meshing typically compute, as a first step, an \emph{orientation field} that assigns local coordinate axes to some points on the input surface \cite{knupp1995mesh,ray2006periodic,kalberer2007quadcover,bommes2009mixed}. The {\em Instant Field-Aligned Meshes} \mbox{algorithm} of Jakob et al.~\cite{jakob2015instant} subsequently computes a \emph{position field} that assigns local coordinates %(in the frame of the local coordinate axes)%
 to those points. The orientation field determines the directions of the edges of a quadrilateral mesh, and the position field determines where the mesh vertices are placed. Ideally, both fields should vary smoothly over the surface, while obeying constraints that help to align the mesh with the sharp edges and the curvature of the object.
 
 Both types of fields can have irregularities called \emph{singularities}. If the fields are defined continuously over the surface, a singularity is a region where one of the fields is not locally smooth.
@@ -22,7 +22,7 @@ usually involves merging pairs of singularities located all around the geometry,
 A global view of quad meshing taken by Bommes et al.~\cite{bommes2009mixed}, who cast the problem of seamless global parametrization as a mixed-integer constrained optimization problem (MIP).
 The method produces quadrilateral surface meshes of very high quality, but it is slow and it does not scale well to large meshes. By contrast, the much more efficient Instant Meshes algorithm of Jakob et al.~\cite{jakob2015instant} uses local smoothing operators to compute an orientation field and a position field quickly. Their method is scalable and produces high-quality quad-dominant meshes without much distortion. However, it may produce singularities in the position field in addition to singularities in the orientation field.
 
-\paragraph*{Our Formulation} We present \emph{QuadriFlow}~\cite{huang2018quadriflow}, a scalable, robust algorithm for automatic quad meshing that builds upon Instant Meshes but uses a global method to remove all the singularities from the position field.
+\paragraph*{Our Formulation:} We present \emph{QuadriFlow}~\cite{huang2018quadriflow}, a scalable, robust algorithm for automatic quad meshing that builds upon Instant Meshes but uses a global method to remove all the singularities from the position field.
 We do not change the orientation field, which typically has many fewer singularities. Our method solves a minimum cost network flow problem as a subproblem, for which efficient algorithms are available. The speed and reliability of our algorithm can enable designers to work on a modeling task interactively and extract a quad mesh in less than a second for tens of thousands of faces, and enable physical simulations to perform per-timestep remeshing updates. Our current implementation is a \emph{remeshing} algorithm, meaning that its input is a triangular mesh of the input surface (like many other quad meshing algorithms), though it could be modified to take a point cloud input as Instant Meshing does.
 
 We view singularity-free position field computation as a globally constrained optimization problem.
@@ -40,13 +40,13 @@ By replacing the MIP solver with an MCF solver that globally reduces the number 
 \label{related:param}
 The seamless surface parameterization problem is closely related to the classical quadrangulation problem in the geometry processing community which has been studied for decades.
 
-\paragraph*{Robust Quadrangulations}
+\paragraph*{Robust Quadrangulations:}
 Robust quadrangulations based on local optimization have a rich literature. Bommes et al.~\cite{bommes2013quad} survey many existing methods for quad-mesh generation and processing.  Many methods transform a pre-existing triangle mesh into an all-quadrilateral mesh: Q-Morph~\cite{owen1999q} does so with an advancing front algorithm.  Blossom-Quad~\cite{remacle2012blossom} uses a perfect matching algorithm to pair triangles into quads with a global-optimal solution. Velho and Zorin~\cite{velho20014} greedily identify the most eligible neighboring triangles to pair. SQuad~\cite{gurung2011squad} improves the representation of the connectivity of meshes, which can be applied to quadrangulation.  Since these methods are not guided by an orientation field, they have difficulty achieving global regularity or smoothness, and their meshes are often very irregular or have many singularities.  Spectral and Morse complex-based algorithms \cite{dong2006spectral,zhang2010wave,ling2014spectral} require no integer optimization but singularity control is hard for them. Such irregularities cause problems for regular convolutions in our texture understanding setting.
 
-\paragraph*{Orientation Fields}
+\paragraph*{Orientation Fields:}
 An orientation field is a powerful tool to guide the edge directions in a quad mesh. Specifically, we use 4-way rotationally symmetric orientation fields~\cite{ray2008n,lai2010metric}. The target directions are derived from the principal curvatures~\cite{cohen2003restricted,cazals2005estimating}, but modified to vary smoothly. Smooth orientation fields are generated by optimizing a nonlinear energy function based on periodic functions~\cite{hertzmann2000illustrating,ray2009geometry} or a mixed-integer representation~\cite{ray2008n,bommes2009mixed}. However, these approaches may get stuck in poor local minima that have many singularities. Kn\"{o}ppel et al.~\cite{knoppel2013globally} propose a global optimization method to obtain better minima. Many approaches \cite{ray2008n,ray2009geometry,crane2010trivial,diamanti2014designing,jiang2015frame} integrate user interactions to help remove singularities. Our approach~\cite{huang2018quadriflow} is guided by the pre-computed orientation field to enforce minimum singularities in the parameterization.
 
-\paragraph*{Field-aligned Quadrangulations}
+\paragraph*{Field-aligned Quadrangulations:}
 A direct approach to generating a quad mesh is to trace the curves in an orientation field~\cite{alliez2003anisotropic}, but it is difficult to control the sizes of the quads obtained that way. Lai et al.~\cite{lai2008incremental} directly optimize a triangle mesh to align its edges to an orientation field, then extract a quad mesh by pairing triangles. These methods are local, so they generate many unnecessary singularities.
 
 Another line of work that deals with a global parameterization of maps is based on global optimization that explicitly bounds the map distortion and produces injective maps. The parameterization can be extracted as quad meshes using \texttt{libQEx}~\cite{ebke2013qex}. Levi and Zorin~\cite{levi2014strict} achieve minimum worst-case distortion and prioritize higher distortion reduction. Chien et al.~\cite{chien2016bounded} solve a locally injective map efficiently with sequential convex programming. Myles et al.~\cite{myles2014robust} use cross-field line tracing to initialize the quad patch partition, then compute a bijective global parametrization.
@@ -207,7 +207,7 @@ Quad Mesh Extraction from Position Field: Section \ref{sec:quad-quadextraction}
 
 Here, we recapitulate the main ideas of Instant Meshes~\cite{jakob2015instant}.  Let $\mathcal{M} = (\mathcal{V}, \mathcal{F}, \mathcal{E})$ be an input surface triangulation where $\mathcal{V} = \{ 1, 2, \ldots, |\mathcal{V}| \}$ is a set of vertex indices, $\mathcal{E} \subseteq \mathcal{V} \times \mathcal{V}$ is a set of directed edges, and $\mathcal{F}$ is a set of triangular faces.
 
-\paragraph*{Orientation Field.}
+\paragraph*{Orientation Field:}
 The first step is to compute a four-way rotationally symmetric (\emph{4-RoSy}) \emph{orientation field} \cite{ray2008n}. 4-RoSy fields are also known as \emph{cross fields}; the orientation field maps each vertex of $\mathcal{M}$ to a cross that is locally tangent to the surface. Each cross is invariant to rotations by $90^\circ$ in its tangent plane. The orientation field guides the alignment of the edges in the quad mesh. For each vertex $v \in \mathcal{V}$, Jakob et al.\ represent the cross at $v$ with a \emph{representative direction} vector $\q_v \in \R^3$ that lies in vertex $v$'s tangent plane; that is, $\q_v$ is orthogonal to $v$'s normal vector $\mathbf{n}_v$. To obtain representational invariance, let $\mathbf{R}_3(\textbf{n}, k) \in \R^{3 \times 3}$ be a 3D rotation matrix that rotates a vector through $90 \cdot k^\circ$ counterclockwise around an axis $\textbf{n}$ (which is the local normal vector). To smooth the orientation field $\q$, Jakob et al.\ define the \emph{extrinsic smoothness \mbox{energy}} of $\q$ to be
 \begin{equation*}
 E_o(\q, k) = \sum_{(u,v) \in \mathcal{E}}
@@ -219,7 +219,7 @@ where $\measuredangle(\cdot, \cdot)$ denotes the angle between two vectors, $k_{
 \end{equation}
 thereby obtaining a smooth orientation field like the one illustrated in Figure~\ref{fig:quad-instant}(b). With this extrinsic energy, the orientation field $\q^*$ also aligns well with shape features of the input geometry.
 
-\paragraph*{Position Field.}
+\paragraph*{Position Field:}
 Given an orientation field $\q^*$, Jakob et al.\ compute a consistent \emph{position field} that determines the placement of the vertices of the quadrilateral mesh. Let $\rho$ be a user-specified distance specifying the desired length of the edges in the output mesh. For each vertex $v \in \mathcal{V}$, the position field maps $v$ to a square lattice that lies in $v$'s tangent space, has all its edge lengths equal to $\rho$, and is aligned with the cross field as indicated by $\q^*_v$. The lattice is invariant under ``horizontal'' or ``vertical'' translations of distance $\rho$---that is, in the directions $\q^*_v$ or $\textbf{n}_v\times\q^*_v$. (Jakob et al.\ call this \emph{positional symmetry} or \emph{PoSy}.) Hence the only degrees of freedom for the lattice can be specified as ``fractional'' horizontal and vertical translations in the range $[0, \rho)$. For a vertex $v \in \mathcal{V}$, let $\p_v \in \R^3$ be a representative lattice point near vertex $v$ in $v$'s tangent plane. Let
 \begin{equation*}
 \textbf{O}_v =[\q^*_v,\,\textbf{n}_v\times\q^*_v]
@@ -278,7 +278,7 @@ If the sum of the integer offsets over a triangle element is nonzero, this trian
 \label{eq:quad-consistent}
 \end{equation}
 
-\paragraph*{Consistent Orientation Constraints.}
+\paragraph*{Consistent Orientation Constraints:}
 %\begin{figure}
 %\includegraphics[width=\linewidth]{diagram/flip.pdf}
 %\caption{The arrows show the orientation direction in the domain parametrized by $\mathbf{Q}$. Negative orientations are marked in red. It finally causes inverted faces in red in the quad mesh.}
@@ -291,7 +291,7 @@ If the position field has triangles with negative orientation, they lead to inve
 \end{equation}
 This constraint is similar to the consistent orientation constraint proposed by Bommes et al.~\cite{bommes2013integer}. Jakob et al.\ do not enforce this constraint, so their meshes can have inverted faces.
 
-\paragraph*{Formulation.}
+\paragraph*{Formulation:}
 Combining Equations~\eqref{eq:quad-im2}, \eqref{eq:quad-consistent}, and~\eqref{eq:quad-noflip}, we formulate the position field problem as follows.
 \begin{align*}
 \minimize_{\p, \t} \quad & E_p(\p, \t)\\
@@ -367,7 +367,7 @@ node distance=1.2cm and 0.6cm
 
 Equation~\eqref{eq:quad-formulation} is an integer programming problem (ILP), but we are able to approximate it as a \emph{minimum cost network flow} (MCF) problem, which is our key contribution. Efficient algorithms such as the network simplex method \cite{orlin1997polynomial} can be applied to find its optimal solution in polynomial time.
 
-\paragraph*{Minimum Cost Flow.}
+\paragraph*{Minimum Cost Flow:}
 \label{sec:mincost}
 % One zHowever, Instant Meshes solves the continuous relaxation without satisfying the integer constraints and already achieve promising results. Thus, it is promising to start from the continuous relaxation, and modify $\textbf{d}_p$ to satisfy all integer constraints.
 
@@ -405,7 +405,7 @@ Let ${\textbf{t}}^*$ be a solution obtained from the algorithm of Jakob et al.\ 
 \end{align}
 where $\HH_{uv}^+$ and $\HH_{uv}^-$ are the maximum allowed modification for ${\d}$ in the positive direction and the negative direction, respectively.  Initially, we set $H^+_{uv}$ and $H^-_{uv}$ so that the $\d_{uv} \in [-2,2]^2$. Then we repeatedly increase this limit until the corresponding MCF problem is feasible. The reason we want to keep $|\d_{uv}|_\infty$ as small as possible is that if there exists a long edge in the integer offsets, we need to subdivide it (later on in this section), which creates more vertices.  This ILP has the form of Equation~\eqref{eq:quad-ilp} and satisfies most of the prerequisites to be cast as an MCF problem, but it does not satisfy the balance condition.
 
-\paragraph*{Balancing Variables.}
+\paragraph*{Balancing Variables:}
 To use the MCF formulation to solve Equation \eqref{eq:quad-mincost}, we need to balance the variables in Equation \eqref{eq:quad-mincost-cons},  making each variable appear twice with opposite signs.  For a manifold triangle mesh, each edge adjoins exactly two triangles except for the edge at the boundary. To make each variable appear exactly twice in Equation \eqref{eq:quad-mincost-cons}, we simply fix $\delta{\textbf{d}}_{e}$ to be a constant for each $e \in \mathcal{E}$ at the boundary.
 
 \begin{figure}
@@ -428,7 +428,7 @@ To balance as many variables as possible, we arbitrarily pick a triangle as the 
 
 %We observe that these rotations to balance variables are also geometrically meaningful. Recall that we rotate equations to balance variables. The rotation through a specific angle to an equation can also be viewed as changing the frame of measurement for integer offsets for its corresponding triangle, where the changed frame can be derived by rotating the original frame through the same angle around the normal axis\jw{Is it not clear?}. To illustrate this implicit meaning, we visualize the boundary edges in green, and the frame of measurement for each triangle $\Delta_{uvw}$ in blue by applying the corresponding rotation to $\mathbf{q}_u$ in Figure~\ref{fig:vis-boundary}. We notice that the frame of measurement is consistent between faces with balanced variables, which is reasonable because the directions of the integer offsets are opposite for the shared edge in adjacent triangles. This also implies the insight for our rotation operation: We balance ${\d}_e$ by measuring the integer offset of edge $e$ in two adjacent faces with a locally consistent frame. \jw{add this paragraph!}
 
-\paragraph*{Feasibility Condition.} Fixing unbalanced variables to $\td^*$ as constants may lead to an infeasible ILP problem. One necessary condition for feasibility is $\sum_{i=1}^n b_i=0$ for $\mathbf{b}$ in Equation \eqref{eq:quad-ilp}.  To prove this, we add all the equality constraints together $\sum_{i=1}^n \mathbf{A}_i \x = \sum_{i=1}^n b_i$, and because each column of $\mathbf{A}$ contains one $+1$, one $-1$ and $n-2$ zeros, the left hand side is equal to zero, so is $\sum_{i=1}^n b_i$.  From the view of MCF, this requires the outbound capacity of the source $s$ equal to the inbound capacity of the sink $t$.
+\paragraph*{Feasibility Condition:} Fixing unbalanced variables to $\td^*$ as constants may lead to an infeasible ILP problem. One necessary condition for feasibility is $\sum_{i=1}^n b_i=0$ for $\mathbf{b}$ in Equation \eqref{eq:quad-ilp}.  To prove this, we add all the equality constraints together $\sum_{i=1}^n \mathbf{A}_i \x = \sum_{i=1}^n b_i$, and because each column of $\mathbf{A}$ contains one $+1$, one $-1$ and $n-2$ zeros, the left hand side is equal to zero, so is $\sum_{i=1}^n b_i$.  From the view of MCF, this requires the outbound capacity of the source $s$ equal to the inbound capacity of the sink $t$.
 
 To guarantee $B:=\sum_{i=1}^n b_i=0$, we apply the following greedy strategy to determine $\delta \d_{uv}$ for unbalanced edges and boundary edges.  Initially, we set $\delta \d_{uv}=0$ for all unbalanced and boundary edges.  Next, we randomly select one of these edges and change it in the direction to decrease the magnitude of $B$. This process is repeated until $B=0$. This strategy is based on the fact that incrementing/decrementing a variable for a boundary edge changes $B$ by one, whereas incrementing/decrementing a variable for an unbalanced edge changes $B$ by two. Note that $B=0$ can always be achieved because we can at least let $\td_{uv}=0$ for all unbalanced edges and boundary edges $(u,v)$ to satisfy it, i.e., setting $\delta \d_{uv} = -\td^*_{uv}$.
 
@@ -451,7 +451,7 @@ Fortunately, we guarantee the strong connectivity in the MCF network: Because we
 \label{fig:quad-subdivide}
 \end{figure}
 
-\paragraph*{Summary.}
+\paragraph*{Summary:}
 To remove position singularities, we first BFS triangles on the mesh to rotate the corresponding equations to balance variables. We fix boundary and unbalanced variables, and randomly modify them to achieve $\sum_{i=1}^n b_i=0$. Then, we build an equivalent MCF network. We set all edge capacities $c_{uv}$ (or $H^-_{uv}=H^+_{uv}$ in the ILP) so that $\d_{uv} \in [-2,2]^2$ and run an MCF solver. If it returns infeasible, we retain the flow value $f$ for each edge and repeatedly increase the capacity until the problem is feasible.
 
 %\begin{algorithm}
@@ -487,7 +487,7 @@ To remove position singularities, we first BFS triangles on the mesh to rotate t
 %\label{fig:flipexample}
 %\end{figure}
 
-\paragraph*{Multi-Resolution MCF.}
+\paragraph*{Multi-Resolution MCF:}
 Under many scenarios, the required density of the quad mesh is significantly lower than the density of the input triangle mesh. This means that most of ${\textbf{d}}$ will finally be zero. Therefore, we are able to accelerate the MCF algorithm with a multi-resolution structure.
 
 For each resolution, we build a coarser network by removing approximately half of zero edges ($\td^*_e=\textbf{0}$) to reduce the number of variables.  Consider a general case where the regularity constraints are satisfied for two equations corresponding to $\Delta_{abc}$ and $\Delta_{aef}$ sharing the edge $a$. The equation for $\Delta_{abc}$ can be written
@@ -508,17 +508,17 @@ To build a hierarchy structure, we loop over all the edges with $\td_e=\textbf{0
 
 In the beginning, we use the network simplex implementation from the LEMON library \cite{dezsHo2011lemon} to solve the MCF at the lowest resolution.  This resolves most of the singularities with minimum change of $\td$.  For further trials with large networks, we approximate the MCF problem as a maximum flow problem for efficiency.  We use the Boykov--Kolmogorov algorithm~\cite{boykov2004experimental} if the number of remaining unsatisfied regularity constraints is greater than 10, and use the Edmonds--Karp algorithm~\cite{edmonds1972theoretical} otherwise.  The maximum flow approximation sacrifices some optimality of Equation \eqref{eq:quad-mincost}, but it greatly improves the efficiency and works well in practice, as Section~\ref{sec:quad-methodology} will demonstrate.
 
-\paragraph*{Subdivision on Integer Offsets.}
+\paragraph*{Subdivision on Integer Offsets:}
 After the Multi-Resolution MCF, $\|{\textbf{d}}_{uv}\|_{\infty}$ might be greater than $1$ in order to satisfy the full flow condition.  This will complicate the mesh extraction stage later. Therefore, we subdivide the integer offsets of those long edges by adding a midpoint and two new edges. Because we require the lengths of the edges to be integers, the two subdivided edges of ${\textbf{d}}_{uv}$ are computed as ${\textbf{d}}_{uv}\;\text{div}\;2$ and $(-{\textbf{d}}_{uv}+{\textbf{d}}_{uv})\;\text{div}\;2$. Figure~\ref{fig:quad-subdivide} shows an example: the long edge ${\textbf{d}}_{13}=(1,2)$ is divided into ${\textbf{d}}_{15}=(0,1)$ and ${\textbf{d}}_{35}=(-1,-1)$, then $\td_{14}$ and $\td_{23}$ are subdivided.
 
 \subsection{Eliminating Inverted Normals}
 \label{sec:quad-flip}
 To enforce the consistent orientation constraint in Equation~\eqref{eq:quad-noflip}, we employ a two-stage method.  First, a greedy algorithm scans the triangle elements in the mesh and iteratively shrinks the inverted triangles. After that, we locally model Equations~\eqref{eq:quad-consistent} and~\eqref{eq:quad-noflip} as a Boolean satisfiability problem and try to resolve the remaining inversions with an SAT solver.  Using this strategy, we are able to generate an inversion-free quad mesh for many testing data, but this is not always guaranteed due to the NP-completeness of the Boolean satisfiability problem.
 
-\paragraph*{Greedy Method.}
+\paragraph*{Greedy Method:}
 One way to shrink an inverted triangle is to move one of its vertices to another. To move a vertex from $u$ to $v$, we set ${\d}_{uv}=0$ and modify $u$'s adjacent edges ${\d}_{uw}$ for all $(u,w)\in\mathfrak{E}$ accordingly to maintain the regularity constraints in Equation~\eqref{eq:quad-consistent}.  This operation locally changes the adjacent edges, and thus the area of the adjacent triangles. We scan all the edges of inverted triangles and shrink an edge only if it does not produce long edges ($\|d^*\|>1$) and reduces the total inverted area.  Our algorithm terminates until no further movement is feasible. This greedy algorithm can efficiently remove most of the inverted triangles. We observe that the remaining inversions are normally located near the orientation singularities.
 
-\paragraph*{Reduction to SAT.}
+\paragraph*{Reduction to SAT:}
 To solve the remaining tough inversions,  we model it as a Boolean satisfiability (SAT) problem.  An SAT problem aims at finding an assignment to satisfy a given Boolean equation.  Although the SAT problem has been proven to be NP-complete, researchers have built efficient SAT solvers based on sophisticated heuristics that are able to solve practical problems with tens of thousands of variables.  To turn the constraints in Equations~\eqref{eq:quad-consistent} and~\eqref{eq:quad-noflip} to a Boolean equation, we represent each integer vector variable $\td_{uv}$ with nine Boolean variables $D^{\x}_{uv}$, where $\x \in \mathbf{S} := \{-1, 0, +1\}^2$ represents the nine possible values of the integer vector as these values are guaranteed to be in $\{-1, 0, +1\}$ after the subdivision stage.  The relationship between the integer variable and Boolean variable is
 \[
 \td_{uv}=\x \Longleftrightarrow D^{\x}_{uv}= \mathbf{true}
@@ -837,7 +837,7 @@ In our experiments, the cost of MIQ~\cite{bommes2009mixed} as implemented in \te
 
 Recall that our algorithm introduces an ILP approximation of a MIP problem, then formulates it as an MCF problem, which is also approximate because of the need to fix some integer offsets to balance the variables. Here we evaluate the influence of these approximations on the mesh quality.
 
-\paragraph*{ILP Approximation.} Instead of jointly optimizing the continuous energy and integer constraints with MIP, we approximate the MIP problem with an ILP problem. Because we do not directly optimize the energy, the ILP solution might not obtain the best energy. This can cause a loss of geometric details when the mesh is coarse. Figure~\ref{fig:quad-coarse} shows the QuadriFlow meshes for the Hand model with different choices of mesh density. At the coarsest resolution, QuadriFlow loses four fingers.
+\paragraph*{ILP Approximation:} Instead of jointly optimizing the continuous energy and integer constraints with MIP, we approximate the MIP problem with an ILP problem. Because we do not directly optimize the energy, the ILP solution might not obtain the best energy. This can cause a loss of geometric details when the mesh is coarse. Figure~\ref{fig:quad-coarse} shows the QuadriFlow meshes for the Hand model with different choices of mesh density. At the coarsest resolution, QuadriFlow loses four fingers.
 
 \begin{figure}
 \centering
@@ -865,7 +865,7 @@ Recall that our algorithm introduces an ILP approximation of a MIP problem, then
 \label{fig:quad-coarse}
 \end{figure}
 
-\paragraph*{MCF Approximation.} To solve the ILP problem, we further approximate it as an MCF problem by fixing some integer offsets to balance the variables.  To test how such an approximation affects the mesh, we experimented on the Hand model with a target resolution of 3,365 vertices. We randomly picked ten different starting triangles for the BFS algorithm.  We find that the percentage of fixed variables ranges from 0.6\% to 0.7\%, which is small. The gap between the worst and the best angle distortion or area distortion is less than 2\% of the median score. Thus we judge the influence of the MCF approximation to be small and acceptable.
+\paragraph*{MCF Approximation:} To solve the ILP problem, we further approximate it as an MCF problem by fixing some integer offsets to balance the variables.  To test how such an approximation affects the mesh, we experimented on the Hand model with a target resolution of 3,365 vertices. We randomly picked ten different starting triangles for the BFS algorithm.  We find that the percentage of fixed variables ranges from 0.6\% to 0.7\%, which is small. The gap between the worst and the best angle distortion or area distortion is less than 2\% of the median score. Thus we judge the influence of the MCF approximation to be small and acceptable.
 
 \begin{table}[tbp]
 \centering
@@ -892,7 +892,7 @@ Hand\_1500\_ILP        & 164.00   & \textbf{8.786778}    & 0.210081  \\  \hline
 \end{tabular}
 \end{table}
 
-\paragraph*{Comparison of Integer Solvers.} To justify the effectiveness of our network flow formulation and our multi-resolution framework, we performed experiments with different integer optimization algorithms on two test examples. Their running times and distortion metrics appear in Table~\ref{tab:quad-methodology}. We tested five different algorithms. \texttt{MF} is the Boykov--Kolmogorov algorithm that solves the maximum flow problem. \texttt{MF\_MR} is a multi-resolution version of \texttt{MF}. \texttt{MCF} is the network simplex algorithm from the LEMON library, which solves the minimum cost flow problem. \texttt{MCF\_MR} is a multi-resolution version of \texttt{MCF}, in which we first solve the lowest resolution with the network simplex algorithm, and then solve the highest resolution with \texttt{MF\_MR}. Lastly, \texttt{ILP} uses Gurobi Optimization~\cite{gurobi} to solve Equation~\eqref{eq:quad-formulation} as an integer linear program.
+\paragraph*{Comparison of Integer Solvers:} To justify the effectiveness of our network flow formulation and our multi-resolution framework, we performed experiments with different integer optimization algorithms on two test examples. Their running times and distortion metrics appear in Table~\ref{tab:quad-methodology}. We tested five different algorithms. \texttt{MF} is the Boykov--Kolmogorov algorithm that solves the maximum flow problem. \texttt{MF\_MR} is a multi-resolution version of \texttt{MF}. \texttt{MCF} is the network simplex algorithm from the LEMON library, which solves the minimum cost flow problem. \texttt{MCF\_MR} is a multi-resolution version of \texttt{MCF}, in which we first solve the lowest resolution with the network simplex algorithm, and then solve the highest resolution with \texttt{MF\_MR}. Lastly, \texttt{ILP} uses Gurobi Optimization~\cite{gurobi} to solve Equation~\eqref{eq:quad-formulation} as an integer linear program.
 
 From the table, we see that multi-resolution can greatly shorten the running times. Furthermore, the network flow algorithms are far more efficient and stable than the integer linear programming algorithms provided by Gurobi, as the former are more specialized whereas ILP is NP-hard. To our surprise, maximum flow algorithms perform nearly as well as minimum cost flow algorithms as measured by the distortion metrics.  Perhaps this is because many maximum flow algorithms operate by repeatedly finding the shortest augmenting path, which tends to keep the $L_1$ norm of Expression~\eqref{eq:quad-formulation} small.
 

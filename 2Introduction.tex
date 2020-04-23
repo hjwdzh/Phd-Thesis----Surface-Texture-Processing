@@ -109,12 +109,11 @@ Our surface convolution is a 2D operator that effectively handles, and thereby o
 We find that the surface parameterization serves not only as a basis for surface convolution operators but also as useful information that is highly correlated with the color signals. Therefore, we create a dataset with pairs of RGB images and pre-computed 3D canonical frames from the scanning data and train a neural network to predict frames from color signals. Our network improves low-level vision tasks including surface normal estimation and feature matching, thus enabling high-level applications in augmented reality (Section~\ref{intro:frame}).
 \end{comment}
 
-
 Given our seamless parameterization of the surface, we are able to explore the texture understanding problem. This section introduces two significant developments: the semantic 3D scene understanding problem using parameterized textures, as well as the 3D frame understanding problem given  RGB images. We discuss more technical details in Chapter~\ref{chapter:texturenet}.
 
 \vspace*{10pt}\noindent We first present the 3D scene understanding problem.
 
-\paragraph*{Semantics from Texture.}
+\paragraph*{Semantics from Texture}
 \begin{figure}
     \begin{center}
         \includegraphics[width=\linewidth]{texturenet/teaser/teaser.pdf}
@@ -132,7 +131,7 @@ Given our seamless parameterization of the surface, we are able to explore the t
 
 \vspace*{10pt}\noindent We now proceed to the 3D frame understanding problem form a single image.
 
-\paragraph*{Canonical Frame Understanding from RGB Images.}
+\paragraph*{Canonical Frame Understanding from RGB Images}
 \label{intro:frame}
 
  \begin{figure}
